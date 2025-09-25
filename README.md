@@ -2,8 +2,8 @@
 
 This repository provides a plug-and-play web template for sharing a literature review database. All configuration lives in two editable files so non-coders can tailor the page without touching HTML, CSS, or JavaScript:
 
-- `assets/config.json` – Controls the page title, hero text, sidebar info, filter labels, submit button, and social links.
-- `assets/database.csv` – Holds the article data that drives the filterable card grid.
+* `assets/config.json` – Controls the page title, hero text, filter labels, info-field labels, submit button, and favicon.
+* `assets/database.csv` – Holds the article data that drives the filterable card grid.
 
 Open `database.html` in a browser after editing these files to see your changes instantly.
 
@@ -12,49 +12,61 @@ Open `database.html` in a browser after editing these files to see your changes 
 Edit `assets/config.json` in any text editor. Each field is plain English; update the sample values with your own content.
 
 | Path | What it controls |
-| --- | --- |
+|----|----|
 | `site.pageTitle` | Browser tab title. |
 | `site.heroHeading` | Large title at the top of the database page. |
 | `site.submitButtonText` | Label inside the optional “add article” button. |
 | `site.submitButtonLink` | URL opened when that button is clicked (leave blank to hide the button). |
-| `filters.focus.label` | Heading for the first filter column. |
-| `filters.medical.label` | Heading for the second filter column. |
-| `filters.findings.label` | Heading for the third filter column and the expanded “Findings” section inside each card. |
-| `sidebar.name` | Name that appears above the navigation. |
-| `sidebar.email` | Email displayed in the contact block. |
-| `sidebar.profileImage` | Path (or URL) to the profile image in the sidebar. |
-| `sidebar.socials` | Array of social links, each with a `label`, `url`, and optional `icon` path. |
+| `filters.filter1.label` | Heading for the first filter column. |
+| `filters.filter2.label` | Heading for the second filter column. |
+| `filters.filter3.label` | Heading for the third filter column. |
+| `infoFields.info1.label` | Heading used in the card details for the first info field. |
+| `infoFields.info2.label` | Heading used in the card details for the second info field. |
+| `infoFields.info3.label` | Heading used in the card details for the third info field. |
 | `branding.favicon` | Path to the favicon shown in the browser tab. |
 
 📝 **Tips**
-- Paths such as `assets/img/profile_headshot.png` are relative to the project root; swap them for your own images placed in the repo.
-- Remove unwanted entries in the `sidebar.socials` array or add new ones by following the same object structure.
-- Stick with valid JSON — double quotes around keys/values and commas between items.
+
+* When referencing local assets (images, icons, etc.), use paths relative to the project root (for example, `assets/img/my-logo.png`).
+* Omit optional fields by leaving them blank or removing them entirely.
+* Stick with valid JSON — double quotes around keys/values and commas between items.
 
 ## 2. Update the Literature Database
 
 `assets/database.csv` is the only data source the page reads. You can edit it in Excel, Google Sheets, or any CSV-friendly tool. Keep the header row exactly as-is so the app can map each column correctly:
 
 ```
-date,authors,title,participant_type,medical_cat,outcomes_cat,doi_link,camp_type,method,participant_details,finding1,finding2,finding3,finding4,finding5
+title,authors_abbrev,venue,abstract,doi_link,filter1,filter2,filter3,info1,info2,info3
 ```
 
-- Each row becomes one card on the page.
-- Use semicolons (e.g., `focus_a; focus_b`) inside `participant_type`, `medical_cat`, and `outcomes_cat` to give a paper more than one tag — the filters understand this automatically.
-- Leave unused `finding` columns blank; the page hides empty fields for you.
-- When you finish editing in Google Sheets, export as **CSV** and replace the existing `assets/database.csv` file.
+* Copy this starter template into your spreadsheet (the first row must remain the header above):
+
+```
+"Example Intervention Improves Outcomes","Lee et al.","Journal of Camp Medicine","Brief abstract or summary of the paper.",https://doi.org/10.1234/example,(ind.) emotional outcomes; (ind.) social outcomes,cancer,youth,"Weekend oncology camp","Mixed-method evaluation","45 campers"
+"Peer Mentoring in Specialty Camps","Martinez & Chen","Recreation & Health","Key findings or abstract text.",,"emerging practice","multiple conditions",,"Summer sessions","Qualitative interviews","32 counselors"
+"Technology Toolkit for Remote Camps","Singh et al.","International Journal of eHealth","Optional abstract text goes here.",https://doi.org/10.5678/toolkit,framework / practice,diabetes; autism spectrum disorder,parents,"Virtual camp format","Toolkit description",""
+```
+
+* Each row becomes one card on the page.
+* Use semicolons (e.g., `theory; practice`) inside any filter column to give a paper more than one tag — the filters understand this automatically.
+* Leave optional columns blank when you do not need them; the page hides empty fields for you.
+* The three `filter` columns feed the filter panels, and their display names come from `config.json`.
+* The three `info` columns populate the expandable details area, each labelled via `config.json`.
+* When you finish editing in Google Sheets, export as **CSV** and replace the existing `assets/database.csv` file.
 
 ## 3. Preview Your Changes
 
+
+
 1. Open `database.html` in any modern browser.
-2. Confirm the hero text, filters, sidebar, and card content reflect your updates.
+2. Confirm the hero text, filters, and card content reflect your updates.
 3. Test the filters and the “Submit an Article” button (if enabled).
 
 ## 4. Optional Enhancements
 
-- Swap images in `assets/img/` or add new ones, updating the paths in `config.json` to match.
-- Adjust styling through `assets/css/database.css` if you are comfortable with CSS, but no edits are required for normal usage.
-- Host the page with GitHub Pages or any static-site service once your content is ready.
+* Swap images in `assets/img/` or add new ones, updating the paths in `config.json` to match.
+* Adjust styling through `assets/css/database.css` if you are comfortable with CSS, but no edits are required for normal usage.
+* Host the page with GitHub Pages or any static-site service once your content is ready.
 
 ## Need a Fresh Copy?
 

@@ -93,35 +93,9 @@
 /*----------------------------------------------------------------------------------------------------------------------------------------------------------------
 # DATABASE STYLING
 --------------------------------------------------------------------------------------------------------------------------------------------------------------*/
-@media (max-width: 1199px) {
- 
-    .header-toggle {
-      display: block;
-      position: fixed;
-      top: 15px;
-      left: 15px;
-      font-size: 24px;
-      background-color: var(--accent-color);
-      color: var(--contrast-color);
-      padding: 10px;
-      border-radius: 50%;
-      cursor: pointer;
-      z-index: 1000;
-    }
-  
-  
-  .header-show {
-      left: 0; /* Show when toggled */
-  }
-  body.menu-open main {
-      margin-left: 300px; /*Push content when menu is open*/
-  }
-}
-
-
 @media (min-width: 1200px) {
   body.database-page main {
-      margin-left: 300px; /* Adjust main content position */
+      margin-left: 0;
   }
 }
 
