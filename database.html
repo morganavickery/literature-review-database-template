@@ -94,12 +94,11 @@
         <!--HERO HEADER SECTION-->
         <section id="hero" class="database-hero section dark-background" style="position: relative;">
             <button
-                onclick="window.open('https://forms.gle/42GckNJQ4EVMdHDr7', '_blank')"
                 class="add-article-btn"
                 type="button"
             >
                 <i class="bi bi-plus-circle" style="font-size: 1em; margin-right: 0.4em;"></i>
-                Submit an Article
+                <span class="add-article-text">Submit an Article</span>
             </button>
             <div class="container hero-text">
                 <h2>Medical Specialty Camp Literature Database</h2>
@@ -118,15 +117,15 @@
             </div>
             <section class="filters">
                 <div class="filter-group">
-                    <h3>Focus</h3>
+                    <h3 data-config-filter="focus">Focus</h3>
                     <div id="focus_cat-filters" class="filter-options"></div>
                 </div>
                 <div class="filter-group">
-                    <h3>Medical Population</h3>
+                    <h3 data-config-filter="medical">Medical Population</h3>
                     <div id="medical_cat-filters" class="filter-options"></div>
                 </div>
                 <div class="filter-group">
-                    <h3>Findings</h3>
+                    <h3 data-config-filter="findings">Findings</h3>
                     <div id="outcome_cat-filters" class="filter-options"></div>
                 </div>
             </section>

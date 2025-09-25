@@ -1,11 +1,53 @@
-document.addEventListener("DOMContentLoaded", function () {
-  // Database and filter logic
+const defaultConfig = {
+  site: {
+    pageTitle: "Medical Specialty Camp Literature Database",
+    heroHeading: "Medical Specialty Camp Literature Database",
+    submitButtonText: "Submit an Article",
+    submitButtonLink: "https://forms.gle/42GckNJQ4EVMdHDr7"
+  },
+  filters: {
+    focus: { label: "Focus" },
+    medical: { label: "Medical Population" },
+    findings: { label: "Findings" }
+  },
+  sidebar: {
+    name: "Jonathan Gerth",
+    email: "jonathan.gerth@yahoo.com",
+    profileImage: "assets/img/profile_headshot.png",
+    socials: [
+      {
+        label: "LinkedIn",
+        url: "https://www.linkedin.com/in/jonathan-gerth-4010b2318/",
+        icon: "assets/img/icons/icon_linkedin.png"
+      },
+      {
+        label: "Google Scholar",
+        url: "https://scholar.google.com/citations?user=AAXLevAAAAAJ&hl=en",
+        icon: "assets/img/icons/icon_gscholar.png"
+      }
+    ]
+  },
+  branding: {
+    favicon: "assets/uploads/signpost-2.svg"
+  }
+};
+
+let appConfig = cloneObject(defaultConfig);
+
+document.addEventListener("DOMContentLoaded", async function () {
   let database = [];
   let filters = {
     focus_cat: [],
     medical_cat: [],
-    outcome_cat: [],
+    outcome_cat: []
   };
+  let filterLabels = {};
+
+  await loadConfig();
+  filterLabels = buildFilterLabels(appConfig);
+  applyConfig(appConfig, filterLabels);
+
+  await loadDatabase();
 
   async function loadDatabase() {
     try {
@@ -13,17 +55,15 @@ document.addEventListener("DOMContentLoaded", function () {
       if (!response.ok) throw new Error("Network response was not ok");
       const text = await response.text();
 
-      // Ensure text is read as UTF-8 (Handling Special Characters)
       const utf8decoder = new TextDecoder("utf-8");
       const decodedText = utf8decoder.decode(new TextEncoder().encode(text));
 
-      const rows = decodedText.trim().split("\n").slice(1); // Skip header row
+      const rows = decodedText.trim().split("\n").slice(1);
 
       database = rows
         .map((row) => {
           const columns = parseCSVRow(row);
-
-          if (columns.length < 14) return null; // Now expect at least 14 columns
+          if (columns.length < 14) return null;
 
           return {
             year: columns[0].trim(),
@@ -40,20 +80,19 @@ document.addEventListener("DOMContentLoaded", function () {
             finding2: decodeEntities(columns[11]?.trim() || ""),
             finding3: decodeEntities(columns[12]?.trim() || ""),
             finding4: decodeEntities(columns[13]?.trim() || ""),
-            finding5: decodeEntities(columns[14]?.trim() || ""),
+            finding5: decodeEntities(columns[14]?.trim() || "")
           };
         })
         .filter((item) => item !== null);
+
       generateFilters();
       displayCards();
     } catch (error) {
-      // Show user-friendly error message
       const container = document.getElementById("database-cards");
       if (container) {
         container.innerHTML =
           '<div class="error-message">Couldn’t load data. Please try again later.</div>';
       }
-      // Optionally log error for debugging
       console.error("Failed to load database:", error);
     }
   }
@@ -67,68 +106,72 @@ document.addEventListener("DOMContentLoaded", function () {
       const char = row[i];
 
       if (char === '"' && row[i + 1] === '"') {
-        current += '"'; // Handle escaped quotes (e.g., `""`)
-        i++; // Skip next quote
+        current += '"';
+        i++;
       } else if (char === '"') {
-        insideQuotes = !insideQuotes; // Toggle insideQuotes flag
+        insideQuotes = !insideQuotes;
       } else if (char === "," && !insideQuotes) {
-        result.push(current.trim()); // Add column when outside quotes
+        result.push(current.trim());
         current = "";
       } else {
         current += char;
       }
     }
 
-    result.push(current.trim()); // Add last column
+    result.push(current.trim());
     return result;
   }
 
-  // Generate Filters Dynamically with Count
   function generateFilters() {
     const categories = ["focus_cat", "medical_cat", "outcome_cat"];
 
     categories.forEach((category) => {
-      let container = document.getElementById(`${category}-filters`);
+      const container = document.getElementById(`${category}-filters`);
       if (!container) return;
 
-      let filterCounts = {};
+      container.innerHTML = "";
+      const filterCounts = {};
 
       database.forEach((item) => {
         if (item[category]) {
-          let values = item[category].split(";").map((value) => value.trim());
+          const values = item[category].split(";").map((value) => value.trim());
           values.forEach((value) => {
             filterCounts[value] = (filterCounts[value] || 0) + 1;
           });
         }
       });
 
-      let sortedValues = Object.keys(filterCounts).sort();
+      const sortedValues = Object.keys(filterCounts).sort();
       if (sortedValues.length === 0) {
         container.innerHTML = "<p>No options available.</p>";
         return;
       }
 
-      sortedValues.forEach((value) => {
-        let count = filterCounts[value];
+      const categoryLabel = filterLabels[category] || formatCategoryName(category);
 
-        let checkbox = document.createElement("input");
+      sortedValues.forEach((value) => {
+        const count = filterCounts[value];
+        const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
         checkbox.value = value;
         checkbox.id = `${category}-${value.replace(/\s+/g, "-").toLowerCase()}`;
-        checkbox.setAttribute("aria-label", `${category.replace("_cat", "").replace("_", " ")}: ${value}`);
+        checkbox.setAttribute(
+          "aria-label",
+          `${categoryLabel}: ${value}`
+        );
         checkbox.addEventListener("change", () => {
           updateFilters(category, value);
           debouncedUpdateFilterCounts();
         });
 
-        let label = document.createElement("label");
+        const label = document.createElement("label");
         label.htmlFor = checkbox.id;
         label.appendChild(checkbox);
 
-        let textSpan = document.createElement("span");
+        const textSpan = document.createElement("span");
         textSpan.textContent = ` ${value} `;
 
-        let countSpan = document.createElement("span");
+        const countSpan = document.createElement("span");
         countSpan.className = "filter-count";
         countSpan.textContent = `[${count}]`;
 
@@ -139,7 +182,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Debounce utility
   function debounce(fn, delay) {
     let timer = null;
     return function (...args) {
@@ -148,19 +190,18 @@ document.addEventListener("DOMContentLoaded", function () {
     };
   }
 
-  // Debounced version of updateFilterCounts
   const debouncedUpdateFilterCounts = debounce(updateFilterCounts, 100);
 
   function updateFilterCounts() {
     const categories = ["focus_cat", "medical_cat", "outcome_cat"];
-    let filteredData = getFilteredData();
+    const filteredData = getFilteredData();
 
     categories.forEach((category) => {
-      let filterCounts = {};
+      const filterCounts = {};
 
       filteredData.forEach((item) => {
         if (item[category]) {
-          let values = item[category].split(";").map((value) => value.trim());
+          const values = item[category].split(";").map((value) => value.trim());
           values.forEach((value) => {
             filterCounts[value] = (filterCounts[value] || 0) + 1;
           });
@@ -170,11 +211,11 @@ document.addEventListener("DOMContentLoaded", function () {
       document
         .querySelectorAll(`#${category}-filters label`)
         .forEach((label) => {
-          let checkbox = label.querySelector("input[type='checkbox']");
-          let countSpan = label.querySelector(".filter-count");
-          let filterValue = checkbox.value.trim();
+          const checkbox = label.querySelector("input[type='checkbox']");
+          const countSpan = label.querySelector(".filter-count");
+          const filterValue = checkbox.value.trim();
 
-          let count = filterCounts[filterValue] || 0;
+          const count = filterCounts[filterValue] || 0;
           countSpan.textContent = `[${count}]`;
 
           if (count === 0) {
@@ -186,27 +227,26 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Update Filter Values & Refresh Cards
   function updateFilters(category, value) {
-    let index = filters[category].indexOf(value);
+    const index = filters[category].indexOf(value);
     if (index > -1) {
-      filters[category].splice(index, 1); // Remove if unchecked
+      filters[category].splice(index, 1);
     } else {
-      filters[category].push(value); // Add if checked
+      filters[category].push(value);
     }
     displayCards();
-    debouncedUpdateFilterCounts(); // Use debounced version
+    debouncedUpdateFilterCounts();
   }
 
   function getFilteredData() {
     return database.filter((item) => {
-      let focusCat = item.focus_cat
+      const focusCat = item.focus_cat
         ? item.focus_cat.split(";").map((v) => v.trim())
         : [];
-      let medicalCat = item.medical_cat
+      const medicalCat = item.medical_cat
         ? item.medical_cat.split(";").map((v) => v.trim())
         : [];
-      let outcomeCat = item.outcome_cat
+      const outcomeCat = item.outcome_cat
         ? item.outcome_cat.split(";").map((v) => v.trim())
         : [];
 
@@ -221,12 +261,13 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Display Cards Dynamically (use DocumentFragment for batching)
   function displayCards() {
-    let container = document.getElementById("database-cards");
-    container.innerHTML = ""; // Clear previous entries
+    const container = document.getElementById("database-cards");
+    if (!container) return;
 
-    let filteredData = database.filter((item) => {
+    container.innerHTML = "";
+
+    const filteredData = database.filter((item) => {
       return (
         (filters.focus_cat.length === 0 ||
           filters.focus_cat.some((filter) =>
@@ -243,25 +284,24 @@ document.addEventListener("DOMContentLoaded", function () {
       );
     });
 
-    // Use DocumentFragment for efficient DOM updates
     const fragment = document.createDocumentFragment();
-
-    // Track expanded card index globally within this render
     let expandedIdx = null;
-    const prevExpanded = document.querySelector('.database-card.card-expanded');
+    const prevExpanded = document.querySelector(".database-card.card-expanded");
     if (prevExpanded) {
-      expandedIdx = parseInt(prevExpanded.getAttribute('data-card-idx'), 10);
+      expandedIdx = parseInt(prevExpanded.getAttribute("data-card-idx"), 10);
     }
 
-    const cardElements = filteredData.map((item, idx) => {
-      let doiURL = item.doi_link.trim();
-      let hasDOI =
-        doiURL !== "" && doiURL !== "-" && /^https?:\/\//.test(doiURL);
+    const focusLabel = filterLabels.focus_cat;
+    const medicalLabel = filterLabels.medical_cat;
+    const outcomeLabel = filterLabels.outcome_cat;
 
-      let card = document.createElement("div");
+    const cardElements = filteredData.map((item, idx) => {
+      const doiURL = item.doi_link.trim();
+      const hasDOI = doiURL !== "" && doiURL !== "-" && /^https?:\/\//.test(doiURL);
+
+      const card = document.createElement("div");
       card.className = "database-card";
       card.setAttribute("data-card-idx", idx);
-
       card.setAttribute("tabindex", "0");
       card.setAttribute("role", "button");
       card.setAttribute("aria-label", `Access paper: ${item.title}`);
@@ -280,7 +320,9 @@ document.addEventListener("DOMContentLoaded", function () {
         if (isExpanding) {
           displayCardsWithExpanded(idx);
         }
+        showHideExpanded();
       });
+
       card.addEventListener("keydown", (e) => {
         if (e.key === "Enter" || e.key === " ") {
           card.click();
@@ -288,62 +330,59 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       });
 
-      // Function to generate tag sections only if the field has data
-      const createTagSection = (heading, values) => {
-        if (!values || values.trim() === "" || values.trim() === "-") return ""; // Hide section if empty
-        let tagsArray = values
+      const createTagSection = (label, values) => {
+        if (!label || !values || values.trim() === "" || values.trim() === "-") return "";
+        const tagsArray = values
           .split(";")
           .map((value) => `<span class="tag">${value.trim()}</span>`)
           .join("");
         return `
                 <div class="tag-section">
-                    <div class="tag-heading">${heading}</div>
+                    <div class="tag-heading">${label}:</div>
                     <div class="tag-container">${tagsArray}</div>
                 </div>
             `;
       };
 
-      // Generate tag sections only if they have data
-      let participantTags = createTagSection("Focus:", item.focus_cat);
-      let medicalTags = createTagSection("Population:", item.medical_cat);
-      let outcomeTags = createTagSection("Findings:", item.outcome_cat);
+      const participantTags = createTagSection(focusLabel, item.focus_cat);
+      const medicalTags = createTagSection(medicalLabel, item.medical_cat);
+      const outcomeTags = createTagSection(outcomeLabel, item.outcome_cat);
 
-      let tagSectionHTML =
+      const tagSectionHTML =
         participantTags || medicalTags || outcomeTags
           ? `<div class="card-tags">${participantTags}${medicalTags}${outcomeTags}</div>`
           : "";
 
-      // Remove only the first and last double quotes if they exist
-      let cleanTitle = item.title.replace(/^"(.*)"$/, "$1");
+      const cleanTitle = item.title.replace(/^"(.*)"$/, "$1");
 
-      // --- Card Details Section: Use same tag section format for details ---
       const createDetailTagSection = (heading, value) => {
         if (!value || value.trim() === "" || value.trim() === "-") return "";
         return `
           <div class="tag-section">
             <div class="detail-heading">${heading}</div>
-            <div class="tag-container">${value.trim()}</span></div>
+            <div class="tag-container">${value.trim()}</div>
           </div>
         `;
       };
+
       const createDetailFindingsSection = (heading, ...findings) => {
-        const validFindings = findings.filter(f => f && f.trim() && f.trim() !== "-");
+        const validFindings = findings.filter((f) => f && f.trim() && f.trim() !== "-");
         if (validFindings.length === 0) return "";
         return `
           <div class="tag-section findings-list">
             <div class="detail-heading">${heading}</div>
             <div class="tag-container">
-              ${validFindings.map(f => `&#8226; ${f.trim()}`).join("<br>")}
+              ${validFindings.map((f) => `&#8226; ${f.trim()}`).join("<br>")}
             </div>
           </div>
         `;
       };
 
-      let detailContext = createDetailTagSection("Context:", item.camp_type);
-      let detailMethod = createDetailTagSection("Method:", item.method);
-      let detailParticipants = createDetailTagSection("Participants:", item.participant_details);
-      let detailFindings = createDetailFindingsSection(
-        "Findings:",
+      const detailContext = createDetailTagSection("Context:", item.camp_type);
+      const detailMethod = createDetailTagSection("Method:", item.method);
+      const detailParticipants = createDetailTagSection("Participants:", item.participant_details);
+      const detailFindings = createDetailFindingsSection(
+        outcomeLabel ? `${outcomeLabel}:` : "Findings:",
         item.finding1,
         item.finding2,
         item.finding3,
@@ -351,14 +390,8 @@ document.addEventListener("DOMContentLoaded", function () {
         item.finding5
       );
 
-      // Only show expandedDetails if at least one detail exists
       let expandedDetails = "";
-      if (
-        detailContext ||
-        detailMethod ||
-        detailParticipants ||
-        detailFindings
-      ) {
+      if (detailContext || detailMethod || detailParticipants || detailFindings) {
         expandedDetails = `
           <div class="expanded-details" style="display:none;">
             <div class="detail-value">
@@ -381,30 +414,23 @@ document.addEventListener("DOMContentLoaded", function () {
             ${expandedDetails}
         `;
 
-      // Show/hide expanded details based on card-expanded class
       const showHideExpanded = () => {
-        const details = card.querySelector('.expanded-details');
+        const details = card.querySelector(".expanded-details");
         if (details) {
-          details.style.display = card.classList.contains('card-expanded') ? 'block' : 'none';
+          details.style.display = card.classList.contains("card-expanded") ? "block" : "none";
         }
       };
-      // Show/hide immediately on click, not on transitionend
-      card.addEventListener('click', function (e) {
-        // ...existing code for .doi-flag and expand/collapse...
-        showHideExpanded();
-      });
-      // Also trigger on initial render
+
       showHideExpanded();
 
-      // DOI flag logic
       if (hasDOI) {
-        const doiFlag = card.querySelector('.doi-flag');
+        const doiFlag = card.querySelector(".doi-flag");
         if (doiFlag) {
-          doiFlag.addEventListener('click', (e) => {
+          doiFlag.addEventListener("click", (e) => {
             e.stopPropagation();
             window.open(doiURL, "_blank");
           });
-          doiFlag.addEventListener('keydown', (e) => {
+          doiFlag.addEventListener("keydown", (e) => {
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
               window.open(doiURL, "_blank");
@@ -416,85 +442,73 @@ document.addEventListener("DOMContentLoaded", function () {
       return card;
     });
 
-    // Helper: re-render with expanded card and edge-case handling
     function displayCardsWithExpanded(expandedIdx) {
       container.innerHTML = "";
       const cardsPerRow = getCardsPerRow();
-      // If expanded card is in the first row and not the first card,
-      // move all cards before it to after it
       if (expandedIdx < cardsPerRow && expandedIdx > 0) {
-        // Cards before expanded
         const before = cardElements.slice(0, expandedIdx);
-        // Expanded card
         const expanded = cardElements[expandedIdx];
-        // Cards after expanded
         const after = cardElements.slice(expandedIdx + 1);
-        // Order: expanded, before, after
         container.appendChild(expanded);
-        before.forEach(card => container.appendChild(card));
-        after.forEach(card => container.appendChild(card));
+        before.forEach((card) => container.appendChild(card));
+        after.forEach((card) => container.appendChild(card));
       } else {
-        // Default order
-        cardElements.forEach(card => container.appendChild(card));
+        cardElements.forEach((card) => container.appendChild(card));
       }
     }
 
-    // Helper: get number of cards per row based on grid settings and container width
     function getCardsPerRow() {
-      // Match min width in grid-template-columns (250px)
       const minCardWidth = 250;
-      const gap = 24; // 1.5rem gap
+      const gap = 24;
       const containerWidth = container.clientWidth || window.innerWidth;
-      // Estimate how many cards fit per row
       return Math.max(1, Math.floor((containerWidth + gap) / (minCardWidth + gap)));
     }
 
-    // If an expanded card exists, use edge-case logic
-    if (expandedIdx !== null && expandedIdx !== undefined && document.querySelector('.database-card.card-expanded')) {
+    if (
+      expandedIdx !== null &&
+      expandedIdx !== undefined &&
+      document.querySelector(".database-card.card-expanded")
+    ) {
       displayCardsWithExpanded(expandedIdx);
     } else {
-      // Always restore original order when no card is expanded
-      cardElements.forEach(card => fragment.appendChild(card));
+      cardElements.forEach((card) => fragment.appendChild(card));
       container.appendChild(fragment);
     }
   }
 
-  // Reset filters logic (single listener)
-  document.getElementById("reset-filters").addEventListener("click", () => {
-    // Uncheck all checkboxes
-    document
-      .querySelectorAll(".filter-options input[type='checkbox']")
-      .forEach((checkbox) => {
-        checkbox.checked = false;
+  const resetFiltersButton = document.getElementById("reset-filters");
+  if (resetFiltersButton) {
+    resetFiltersButton.addEventListener("click", () => {
+      document
+        .querySelectorAll(".filter-options input[type='checkbox']")
+        .forEach((checkbox) => {
+          checkbox.checked = false;
+        });
+
+      document.querySelectorAll(".filter-options select").forEach((select) => {
+        select.selectedIndex = 0;
       });
 
-    // Reset dropdowns if applicable
-    document.querySelectorAll(".filter-options select").forEach((select) => {
-      select.selectedIndex = 0; // Reset to first option
-    });
-
-    filters = { focus_cat: [], medical_cat: [], outcome_cat: [] };
-    displayCards();
-    updateFilterCounts(); // Reset filter counts
-  });
-
-  // Header toggle logic
-  let toggle = document.querySelector(".header-toggle");
-  let header = document.querySelector(".header");
-  if (toggle && header) {
-    toggle.addEventListener("click", function () {
-      header.classList.toggle("header-show");
-      document.body.classList.toggle("menu-open"); // Push content when open
+      filters = { focus_cat: [], medical_cat: [], outcome_cat: [] };
+      displayCards();
+      updateFilterCounts();
     });
   }
 
-  // Filter section toggle logic
+  const toggle = document.querySelector(".header-toggle");
+  const header = document.querySelector(".header");
+  if (toggle && header) {
+    toggle.addEventListener("click", function () {
+      header.classList.toggle("header-show");
+      document.body.classList.toggle("menu-open");
+    });
+  }
+
   const toggleButton = document.getElementById("toggle-filters");
   const filtersSection = document.querySelector(".filters");
   if (toggleButton && filtersSection) {
     toggleButton.addEventListener("click", function () {
       const isCollapsed = filtersSection.classList.toggle("collapsed");
-      // Toggle the button text and icon
       if (isCollapsed) {
         toggleButton.innerHTML = '<i id="arrow-icon" class="bi bi-arrow-down"></i> Show Filters';
       } else {
@@ -502,15 +516,198 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
   }
-
-  // Initialize database loading
-  loadDatabase();
 });
 
+async function loadConfig() {
+  let mergedConfig = cloneObject(defaultConfig);
+  try {
+    const response = await fetch("assets/config.json", { cache: "no-store" });
+    if (!response.ok) throw new Error("Config not found");
+    const userConfig = await response.json();
+    mergedConfig = mergeDeep(defaultConfig, userConfig);
+  } catch (error) {
+    console.warn("Using default configuration due to error loading config:", error);
+  }
+  appConfig = mergedConfig;
+}
+
+function buildFilterLabels(config) {
+  const focusLabel = getFilterLabel(config, "focus", defaultConfig.filters.focus.label);
+  const medicalLabel = getFilterLabel(config, "medical", defaultConfig.filters.medical.label);
+  const findingsLabel = getFilterLabel(config, "findings", defaultConfig.filters.findings.label);
+
+  return {
+    focus_cat: focusLabel,
+    medical_cat: medicalLabel,
+    outcome_cat: findingsLabel
+  };
+}
+
+function getFilterLabel(config, key, fallback) {
+  const override = config?.filters?.[key]?.label;
+  if (typeof override === "string" && override.trim().length > 0) {
+    return override.trim();
+  }
+  return fallback;
+}
+
+function applyConfig(config, filterLabels) {
+  const siteTitle = config?.site?.pageTitle || defaultConfig.site.pageTitle;
+  document.title = siteTitle;
+
+  const heroHeading = document.querySelector(".hero-text h2");
+  if (heroHeading) {
+    heroHeading.textContent = config?.site?.heroHeading || defaultConfig.site.heroHeading;
+  }
+
+  const addButton = document.querySelector(".add-article-btn");
+  if (addButton) {
+    const buttonTextNode = addButton.querySelector(".add-article-text") || addButton;
+    const buttonText = config?.site?.submitButtonText || defaultConfig.site.submitButtonText;
+    buttonTextNode.textContent = buttonText;
+
+    const submitLink = config?.site?.submitButtonLink;
+    addButton.onclick = null;
+    addButton.style.display = "";
+    addButton.removeAttribute("aria-disabled");
+
+    if (submitLink) {
+      addButton.onclick = (event) => {
+        event.preventDefault();
+        window.open(submitLink, "_blank");
+      };
+    } else {
+      addButton.style.display = "none";
+      addButton.setAttribute("aria-disabled", "true");
+    }
+  }
+
+  if (filterLabels) {
+    const headingMap = {
+      focus: filterLabels.focus_cat,
+      medical: filterLabels.medical_cat,
+      findings: filterLabels.outcome_cat
+    };
+
+    Object.keys(headingMap).forEach((key) => {
+      const heading = document.querySelector(`[data-config-filter="${key}"]`);
+      if (heading && headingMap[key]) {
+        heading.textContent = headingMap[key];
+      }
+    });
+  }
+
+  const faviconLink = document.querySelector("link[rel='icon']");
+  const faviconPath = config?.branding?.favicon || defaultConfig.branding.favicon;
+  if (faviconLink && faviconPath) {
+    faviconLink.setAttribute("href", faviconPath);
+  }
+
+  const sitename = document.querySelector(".sitename");
+  const sidebarName = config?.sidebar?.name || defaultConfig.sidebar.name;
+  if (sitename && sidebarName) {
+    sitename.textContent = sidebarName;
+  }
+
+  const profileImg = document.querySelector(".profile-img img");
+  const profileSrc = config?.sidebar?.profileImage || defaultConfig.sidebar.profileImage;
+  if (profileImg && profileSrc) {
+    profileImg.setAttribute("src", profileSrc);
+  }
+
+  const emailTarget = document.querySelector(".contact-container strong");
+  const sidebarEmail = config?.sidebar?.email || defaultConfig.sidebar.email;
+  if (emailTarget) {
+    emailTarget.textContent = sidebarEmail;
+  }
+
+  const socialLinksContainer = document.querySelector(".social-links");
+  if (socialLinksContainer) {
+    const socials = Array.isArray(config?.sidebar?.socials)
+      ? config.sidebar.socials
+      : [];
+
+    socialLinksContainer.innerHTML = "";
+
+    if (socials.length === 0) {
+      socialLinksContainer.style.display = "none";
+    } else {
+      socialLinksContainer.style.display = "";
+      socials.forEach((social, index) => {
+        if (!social || !social.url) return;
+
+        const link = document.createElement("a");
+        link.href = social.url;
+        link.className = "social-button";
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.setAttribute(
+          "aria-label",
+          social.label || `Social link ${index + 1}`
+        );
+
+        if (social.icon) {
+          const img = document.createElement("img");
+          img.src = social.icon;
+          img.alt = social.label ? `${social.label} Icon` : "Social icon";
+          img.className = "social-icon";
+          link.appendChild(img);
+        } else {
+          link.textContent = social.label || social.url;
+        }
+
+        socialLinksContainer.appendChild(link);
+      });
+    }
+  }
+}
+
+function mergeDeep(target, source) {
+  if (Array.isArray(source)) {
+    return source.slice();
+  }
+
+  if (!isObject(source)) {
+    return source;
+  }
+
+  const base = isObject(target) ? target : {};
+  const output = {};
+
+  Object.keys(base).forEach((key) => {
+    output[key] = cloneObject(base[key]);
+  });
+
+  Object.keys(source).forEach((key) => {
+    output[key] = mergeDeep(base[key], source[key]);
+  });
+
+  return output;
+}
+
+function isObject(item) {
+  return Boolean(item) && typeof item === "object" && !Array.isArray(item);
+}
+
+function cloneObject(obj) {
+  if (obj === undefined) {
+    return undefined;
+  }
+  return JSON.parse(JSON.stringify(obj));
+}
+
+function formatCategoryName(key) {
+  const cleaned = key.replace("_cat", "").replace(/_/g, " ").trim();
+  if (!cleaned) return "";
+  return cleaned
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
 function decodeEntities(encodedString) {
-  let textarea = document.createElement("textarea");
+  const textarea = document.createElement("textarea");
   textarea.innerHTML = encodedString;
   return textarea.value;
 }
-
-

@@ -1,0 +1,39 @@
+{
+  "site": {
+    "pageTitle": "Medical Specialty Camp Literature Database",
+    "heroHeading": "Medical Specialty Camp Literature Database",
+    "submitButtonText": "Submit an Article",
+    "submitButtonLink": "https://forms.gle/42GckNJQ4EVMdHDr7"
+  },
+  "filters": {
+    "focus": {
+      "label": "Focus"
+    },
+    "medical": {
+      "label": "Medical Population"
+    },
+    "findings": {
+      "label": "Findings"
+    }
+  },
+  "sidebar": {
+    "name": "Jonathan Gerth",
+    "email": "jonathan.gerth@yahoo.com",
+    "profileImage": "assets/img/profile_headshot.png",
+    "socials": [
+      {
+        "label": "LinkedIn",
+        "url": "https://www.linkedin.com/in/jonathan-gerth-4010b2318/",
+        "icon": "assets/img/icons/icon_linkedin.png"
+      },
+      {
+        "label": "Google Scholar",
+        "url": "https://scholar.google.com/citations?user=AAXLevAAAAAJ&hl=en",
+        "icon": "assets/img/icons/icon_gscholar.png"
+      }
+    ]
+  },
+  "branding": {
+    "favicon": "assets/uploads/signpost-2.svg"
+  }
+}
