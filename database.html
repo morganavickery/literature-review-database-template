@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-GB97RX1FGH"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-GB97RX1FGH');
+</script>
+
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Medical Specialty Camp Literature Database</title>
+    <meta content="" name="description">
+    <meta content="" name="keywords">
+    <meta charset="UTF-8">
+    <link rel="icon" href="assets/uploads/signpost-2.svg">
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+        rel="stylesheet">
+
+    <!-- Vendor CSS Files -->
+    <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+    <link href="assets/vendor/aos/aos.css" rel="stylesheet">
+    <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+    <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+
+    <!-- Main CSS File -->
+    <link href="assets/css/main.css" rel="stylesheet">
+    <link href="assets/css/database.css" rel="stylesheet">
+
+</head>
+
+<body class="database-page">
+    <main class="main">
+        <!--HAMBURGER MENU-->
+        <header id="header" class="header dark-background d-flex flex-column">
+            <i class="header-toggle d-xl-none bi bi-list"></i>
+
+            <div class="profile-img">
+                <img src="assets/img/profile_headshot.png" alt="" class="img-fluid rounded-circle">
+            </div>
+
+            <a href="index.html" class="logo d-flex align-items-center justify-content-center">
+                <h1 class="sitename">Jonathan Gerth</h1>
+            </a>
+
+            <!-- REPLACE UNDERSCORES WITH LINKS TO SOCIALS; DELETE ANY N/A -->
+    <div class="social-links text-center">
+
+      <a href="https://www.linkedin.com/in/jonathan-gerth-4010b2318/" class="social-button">
+        <img src="assets/img/icons/icon_linkedin.png" alt="LinkedIn Icon" class="social-icon">
+      </a>
+
+          <a href="https://scholar.google.com/citations?user=AAXLevAAAAAJ&hl=en" class="social-button">
+      <img src="assets/img/icons/icon_gscholar.png" alt="Google Scholar Icon" class="social-icon">
+    </a>
+    </div>
+
+            <!-- NAVIGATION MENU-->
+            <nav id="navmenu" class="navmenu">
+                <ul>
+                    <li><a href="index.html#about"><i class="bi bi-person-lines-fill navicon"></i>About My Work</a></li>
+                    <li><a href="index.html#publications"><i class="bi bi-file-earmark-text navicon"></i>
+                            Publications</a></li>
+                    <li><a href="index.html#presentations"><i class="bi bi-file-easel navicon"></i> Presentations</a>
+                    </li>
+                    <li><a href="index.html#projects"><i class="bi bi-signpost-2 navicon"></i> Professional
+                            Experience</a></li>
+                    <li><a href="database.html"><i class="bi bi-file-earmark-spreadsheet navicon"></i>Literature
+                            Database</a></li>
+                    <!-- <li><a href="#cv" class="active"><i class="bi bi-blockquote-left navicon"></i>Curriculum Vitae</a></li> -->
+                </ul>
+            </nav>
+
+      <div class="contact-container">
+                <p><em>email</em><br>
+                    <strong>jonathan.gerth@yahoo.com</strong>
+                </p>
+            </div>
+
+        </header>
+
+        <!--HERO HEADER SECTION-->
+        <section id="hero" class="database-hero section dark-background" style="position: relative;">
+            <button
+                onclick="window.open('https://forms.gle/42GckNJQ4EVMdHDr7', '_blank')"
+                class="add-article-btn"
+                type="button"
+            >
+                <i class="bi bi-plus-circle" style="font-size: 1em; margin-right: 0.4em;"></i>
+                Submit an Article
+            </button>
+            <div class="container hero-text">
+                <h2>Medical Specialty Camp Literature Database</h2>
+            </div>
+        </section>
+
+        <!-- FILTERS SECTION CONTAINER -->
+        <section class="filters-section">
+            <div class="filter-controls">
+                <button id="toggle-filters" class="filter-button">
+                    Hide Filters <i id="arrow-icon" class="bi bi-arrow-up"> </i>
+                </button>
+                <button id="reset-filters" class="filter-button">
+                    Reset Filters <i class="bi bi-arrow-counterclockwise"></i>
+                </button>
+            </div>
+            <section class="filters">
+                <div class="filter-group">
+                    <h3>Focus</h3>
+                    <div id="focus_cat-filters" class="filter-options"></div>
+                </div>
+                <div class="filter-group">
+                    <h3>Medical Population</h3>
+                    <div id="medical_cat-filters" class="filter-options"></div>
+                </div>
+                <div class="filter-group">
+                    <h3>Findings</h3>
+                    <div id="outcome_cat-filters" class="filter-options"></div>
+                </div>
+            </section>
+        </section>
+
+        <!-- DATABASE CARDS TABLE -->
+        <section class="database-container">
+            <div class="articles-header">
+                <h2>Articles</h2>
+            </div>
+            <div id="database-cards" class="cards-container"></div>
+        </section>
+
+
+        <script src="assets/js/database.js"></script>
+    </main>
+
+</body>
+
+</html>

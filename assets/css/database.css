@@ -1,0 +1,738 @@
+/*-------------------------------------------------------------------
+  # GENERAL STYLES
+-------------------------------------------------------------------*/
+
+:root {
+  --background-color: #ffffff;
+  --default-color: black;
+  --heading-color: black;
+  --accent-color: #EF8A17;
+  --surface-color: #FBF8C5;
+  --contrast-color: #ffffff;
+  --nav-color: #FBF8C5;
+  --nav-hover-color: #FBF8C5;
+  --nav-mobile-background-color: #040b14;
+  --offwhite: #FBF8C5;
+  --grey: #33392D;
+  --offblack: #071013;
+  --sienna: #8F250C;
+  --timberwolf: #D3D0CB;
+
+  --tangerine: #EF8A17;
+  --timberwolf: #D3D0CB;
+  --charcoal: #001427;
+}
+
+/* Smooth scroll */
+:root {
+  scroll-behavior: smooth;
+}
+
+/* Light and Dark Theme Adjustments */
+.light-background {
+  --background-color: rgba(239, 138, 23, 0.2);
+  --surface-color: var(--offwhite);
+}
+
+.dark-background {
+  --background-color: #8F250C;
+  --default-color: #ffffff;
+  --heading-color: #ffffff;
+  --surface-color: var(--sienna);
+  --contrast-color: #ffffff;
+}
+
+:root {
+  --default-font: "Lato", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --heading-font: "Raleway", sans-serif;
+  --nav-font: "Lato", sans-serif;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  /* margin: 20px; */
+  /* padding: 20px; */
+  background-color: var(--background-color);
+}
+
+/*-------------------------------------------------------------------
+HERO SECTION
+-------------------------------------------------------------------*/
+
+.database-hero {
+  width: 100%;
+  min-height: 20vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end; /* Anchor content to the bottom */
+  align-items: center;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+  padding: 0;
+}
+
+.hero {
+  position: relative; /* Ensures it behaves normally */
+  z-index: 1;
+}
+
+
+/* Ensure the hero title is at the bottom of the container */
+.database-hero .container {
+  position: relative;
+  z-index: 3;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end; /* Push title to the bottom */
+  gap: 20px;
+  text-align: center;
+  padding: 20px;
+  height: 100%;
+  flex: 1 1 auto;
+}
+
+/*-------------------------------------------------------------------
+  # FILTERS SECTION - COMPACT LAYOUT
+-------------------------------------------------------------------*/
+
+.filters-section {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background-color: rgba(255, 255, 255, 0.4); /* Semi-transparent white */
+  backdrop-filter: blur(8px); /* Adds a slight blur effect */
+  padding: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Keeps filters readable */
+}
+
+/* Filters Section */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 15px;
+  background-color: rgba(211, 208, 203, 1); /* Timberwolf background with transparency */
+  border-radius: 8px;
+  width: 100%;
+  gap: 20px;  /* Horizontal gap by default */
+  transition: all 0.3s ease; /* Smooth transition */
+  z-index: -1;
+}
+
+/* Each filter group */
+.filter-group {
+  flex: 1;
+  min-width: 200px; /* Prevents too small of a filter group */
+  margin-bottom: 10px;  /* Space between filter groups when stacked vertically */
+}
+
+/* Filter Headings */
+.filter-group h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+/* Collapsed filters are hidden */
+.filters.collapsed {
+  height: 0;  /* Instead of max-height */
+  opacity: 0;
+  visibility: hidden;
+  padding: 0;
+  margin: 0;
+  gap: 0; /* Remove space when collapsed */
+}
+
+
+
+
+/* Additional styling for filter options and checkboxes (keep unchanged) */
+.filter-options {
+  display: flex;
+  flex-direction: column;
+  max-height: 150px;
+  overflow-y: auto;
+  padding: 5px;
+  border: 1px solid var(--grey);
+  border-radius: 5px;
+  background: rgb(256,256,256,.8);
+}
+
+/* Adjusting checkbox and other option styles (keep unchanged) */
+.filter-options input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin-right: 6px;
+  appearance: none;
+  border: 0.5px solid var(--grey);
+  border-radius: 3px;
+  background-color: var(--timberwolf);
+  cursor: pointer;
+  display: inline-block;
+  position: relative;
+  transition: all 0.2s ease-in-out;
+}
+
+.filter-options label {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: var(--grey);
+  cursor: pointer;
+  gap: 6px;
+}
+
+.testing {
+  color: red;
+  background-color: yellow;
+}
+
+.filter-options .filter-count {
+  font-weight: 300;
+  color: var(--grey);
+  font-size: 0.9em;
+  transition: color 0.3s ease-in-out;
+}
+
+/* Ensure the text color is greyed out */
+.disabled-filter {
+  color: grey !important;  /* Make text grey */
+  opacity: 0.75 !important; /* Reduce opacity */
+}
+
+/* Ensure disabled checkboxes cannot be clicked */
+.disabled-filter input[type="checkbox"] {
+  pointer-events: none; /* Prevent clicks */
+  opacity: 1.0; /* Slight transparency */
+}
+
+
+
+/* When Checkbox is Checked */
+.filter-options input[type="checkbox"]:checked + span {
+  color: var(--sienna);
+  font-weight: 600;
+}
+
+.filter-options input[type="checkbox"]:checked + span + .filter-count {
+  color: var(--sienna);
+  font-weight: 600;
+}
+
+.filter-options input[type="checkbox"]:checked {
+  background-color: var(--sienna);
+  border-color: var(--sienna);
+}
+
+/* Checkmark Effect */
+.filter-options input[type="checkbox"]::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 6px;
+  height: 12px;
+  border: solid white;
+  border-width: 0 1px 1px 0;
+  transform: rotate(45deg);
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+/* Show Checkmark When Checked */
+.filter-options input[type="checkbox"]:checked::after {
+  opacity: 1;
+}
+
+/* Hover Effect */
+.filter-options input[type="checkbox"]:hover {
+  background-color: color-mix(in srgb, var(--timberwolf) 50%, white 10%);
+  border-color: var(--sienna);
+}
+
+/* Focus State for Accessibility */
+.filter-options input[type="checkbox"]:focus {
+  outline: 1px solid var(--sienna);
+}
+
+
+
+/* Button Container - Holds Reset & Toggle Buttons */
+.filter-controls {
+  display: flex;
+  width: 100%;
+  gap: 10px; /* Space between buttons */
+  margin-bottom: 10px; /* Space below buttons */
+  justify-content: space-between; /* Make sure buttons take up half the width each */
+  z-index: 2;
+}
+
+/* Buttons for Reset & Toggle Filters */
+.filter-button {
+  flex: 1; /* Ensures each button takes up half of the container width */
+  background-color: var(--sienna);
+  color: white;
+  border: 2px solid var(--sienna);
+  padding: 10px 15px;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  text-align: center;
+  width: 48%; /* Ensure buttons fit within container */
+  white-space: nowrap; /* Prevent text from wrapping */
+}
+
+.filter-button:hover {
+  background-color: color-mix(in srgb, var(--sienna) 80%, var(--timberwolf) 20%);
+  border-color: var(--sienna);
+  color: white;
+}
+
+.filter-button:focus {
+  outline: 2px solid var(--sienna);
+  outline-offset: 2px;
+}
+
+#toggle-filters i {
+  margin-right: 10px; /* Space between the text and the icon */
+  transition: transform 0.3s ease-in-out;
+}
+
+#toggle-filters.collapsed i {
+  transform: rotate(180deg); /* Flip the icon when collapsed */
+}
+
+
+.reset-button {
+  background-color: var(--sienna);
+  color: white;
+  border: 2px solid var(--sienna);
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  margin-top: 10px;
+}
+
+.reset-button:hover {
+  background-color: color-mix(in srgb, var(--sienna) 80%, var(--timberwolf) 20%);
+  border-color: var(--sienna);
+  color: white;
+}
+
+.reset-button:focus {
+  outline: 2px solid var(--sienna);
+  outline-offset: 2px;
+}
+
+
+/*-------------------------------------------------------------------
+  # DATABASE CONTAINER
+-------------------------------------------------------------------*/
+
+.database-container {
+  background: var(--background-color);
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.15);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  /* text-align: center; */
+}
+
+.articles-header {
+/* align-content: center; */
+text-align: center;
+padding-bottom: 10px;
+}
+
+/* Cards Layout */
+.cards-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+/* Cards grid layout */
+#database-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+/* Strict card sizing */
+.database-card {
+  width: 100%;
+  min-width: 300px;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: #ffffff;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.3);
+  border: 0.5px solid var(--grey);
+  transition: 
+    transform 0.2s ease-in-out, 
+    box-shadow 0.2s ease-in-out,
+    grid-column 0.2s,
+    background-color 0.2s;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  position: relative;
+}
+
+/* Only the expanded card stretches across the row, but stays within the grid container */
+.database-card.card-expanded {
+  grid-column: 1 / -1;
+  width: 100%;
+  max-width: 100%; /* Fill the grid container, not the viewport */
+  min-width: 0;
+  z-index: 10;
+  transform: none; /* No scale by default */
+  box-shadow: 0px 8px 24px rgba(0,0,0,0.25);
+  background-color: #fff; /* Match normal card background */
+}
+
+/* HOVER EFFECT for all cards, including expanded */
+.database-card:hover,
+.database-card.card-expanded:hover {
+  transform: translateY(-5px);
+  box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.2);
+  background-color: rgba(239, 138, 23, 0.1);
+}
+
+
+/* Centered & Styled Title */
+.card-header {
+  display: grid;
+  grid-template-columns: auto 100px; /* Left column for heading, right for tags */
+  /* gap: 5px; */
+  /* margin:5px; */
+}
+
+/* DOI FLAG (Access Paper) */
+.doi-flag {
+  width: 100px;
+  height: 25px;
+  text-align: center;
+  background: rgb(143, 37, 12, .6);
+  color: var(--contrast-color);
+  /* padding: 4px 8px; */
+  font-size: 10px;
+  font-weight:bolder;
+  border-radius: 4px;
+  padding: 5px;
+  text-transform: uppercase;
+  margin: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  outline: none;
+  /* Optional: visually indicate focus for accessibility */
+}
+.doi-flag:focus, .doi-flag:hover {
+  background: rgb(143, 37, 12, 0.85);
+  box-shadow: 0 0 0 2px var(--sienna);
+}
+
+/* Prevent pointer events from bubbling up to the card */
+.doi-flag {
+  pointer-events: auto;
+  z-index: 20;
+  position: relative;
+}
+
+/* Author & Year (No Bold) */
+.authors-year {
+  font-size: 11px;
+  font-weight: normal; /* Removed bold */
+  font-style: italic;
+  color: var(--grey);
+  margin: 0;
+  padding: 0;
+
+  /* margin-bottom: 5px; */
+}
+
+/* Centered & Styled Title */
+.card-title {
+  font-size: 15px;
+  font-weight: 500;
+  text-align: center;
+  margin: 10px 0px;
+  line-height: 14px;
+  color: var(--offblack);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+/*-------------------------------------------------------------------
+  # DATABASE CARD TAG STYLES (SMALLER & CLEANER)
+-------------------------------------------------------------------*/
+
+.card-tags div {
+  font-size: 12px;  /* Smaller font size for tag headings */
+  font-weight: normal; /* No bold */
+  margin-bottom: 3px;
+}
+
+
+/* Container for Each Tag Section */
+.tag-section {
+  display: grid;
+  grid-template-columns: 70px auto; /* Left column for heading, right for tags */
+  align-items: right; /* Align heading to first tag */
+  gap: 10px;
+  margin-bottom: 8px; /* Space between sections */
+}
+
+/* Headings (Left Column) */
+.tag-heading {
+  font-size: xx-small; /* Smaller text */
+  font-weight: 100;
+  font-style: italic;
+  text-align: right;
+  color: var(--grey);
+  white-space: nowrap;
+}
+
+/* Tags Container (Right Column) */
+.tag-container {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+/* Individual Tags */
+.tag {
+  display: inline-block;
+  background: rgb(211, 208, 203,.5);
+  color: var(--charcoal);
+  font-size: 10px; /* Smaller text */
+  font-weight: 400;
+  padding: 3px 6px; /* Reduce padding */
+  border-radius: 3px;
+  margin: 1px; /* Reduce space between tags */
+  /* white-space: nowrap; */
+}
+
+.detail-heading {
+  font-size: xx-small; /* Smaller text */
+  font-weight: lighter;
+  font-style: italic;
+  text-align: right;
+  color: var(--charcoal);
+  white-space: nowrap;
+}
+
+.detail-value {
+  display: inline-block;
+  color: var(--charcoal);
+  font-size: 10px; /* Smaller text */
+  font-weight: 400;
+  padding: 3px 6px; /* Reduce padding */
+  border-radius: 3px;
+  margin: 1px; /* Reduce space between tags */
+}
+
+/*-------------------------------------------------------------------
+MOBILE SCREEN RESPONSIVENESS
+-------------------------------------------------------------------*/
+
+@media (max-width: 768px) {
+  .filters {
+    flex-direction: column;  /* Stack filter groups vertically on mobile */
+    gap: 10px;  /* Smaller gap between stacked filters */
+    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+    opacity: 1;  /* Make it visible by default */
+    z-index: 0;  /* Ensure filters are on top of other elements */
+  }
+
+  .filters.collapsed {
+    transform: translateY(-100%); /* Move the filters up out of view */
+    opacity: 0;  /* Fade them out */
+    z-index: -1; /* Keep the filters behind other elements when collapsed */
+  }
+
+  .filter-group {
+    width: 100%; /* Ensure each filter group takes up the full width */
+    z-index: 0; /* Ensure the filter groups remain in the correct stacking order */
+  }
+
+  .filter-group h3 {
+      margin-bottom: 5px; /* Reduce spacing below filter headings */
+      font-size: 14px; /* Slightly smaller text */
+  }
+
+  .filter-options  {
+      max-height: 120px; /* Slightly smaller to save space */
+      padding: 4px;
+      font-size: 10px;
+      display: grid;  
+      /* Use grid for multi-column layout */
+      grid-template-columns: repeat(2, 1fr);  /* Create 2 equal-width columns */
+  }
+
+  .filter-controls {
+    z-index: 1;  /* Higher than the filters */
+  }
+
+  #toggle-filters, #reset-filters {
+    z-index: 2; /* Ensure the buttons remain on top of the filters */
+  }
+  .filter-button {
+    font-size: 14px; /* Shrink font size */
+    padding: 8px 12px; /* Reduce padding */
+  }
+
+  .database-hero {
+    padding: 10px;  /* Reduced padding for small screens */
+    height: min-content;
+  }
+
+  .database-hero h2 {
+    font-size: 1.5rem;  /* Smaller font size on narrow screens */
+    line-height: 1.2;  /* Adjust line-height for smaller font size */
+  }
+
+  .filter-options label {
+    font-size: 0.8rem;
+  }
+
+
+  .database-card {
+    width: auto;
+  }
+
+  .filter-options input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .database-hero .container {
+    padding: 8px;  /* Even smaller padding */
+  }
+  .database-card {
+    width: auto;
+  }
+
+  .database-hero h2 {
+    font-size: 1.25rem;  /* Even smaller font size */
+    line-height: 1.2;
+  }
+  .filter-options input[type="checkbox"] {
+    width: 12px;
+    height: 12px;
+  }
+
+  .filter-options  {
+    /* Use grid for multi-column layout */
+    grid-template-columns: repeat(1, 1fr);  /* Create 2 equal-width columns */
+}
+}
+
+
+/* Ensure content isn't covered by sidebar */
+@media (min-width: 1200px) {
+  body.database-page main {
+      margin-left: 300px;
+  }
+
+  .database-card {
+    width: auto;
+  }
+
+  .filter-options input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+  }
+
+}
+
+/* Expanded details section, hidden by default, shown when card is expanded */
+.expanded-details {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(0,0,0,0.06);
+  border-radius: 6px;
+  font-size: 0.98em;
+  color: var(--offblack);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  animation: fadeIn 0.3s;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px);}
+  to { opacity: 1; transform: translateY(0);}
+}
+
+/* Show findings in details as a vertical list, each on a new line */
+.expanded-details .findings-list .tag-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2em;
+}
+.expanded-details .findings-list .tag {
+  display: block;
+  background: none;
+  border: none;
+  padding: 0 0 0 1em;
+  margin: 0;
+  color: var(--offblack);
+  font-size: 10px;
+  font-weight: 400;
+  /* visually left-aligned, no bullet */
+}
+
+/* Add Article Button */
+.add-article-btn {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: var(--tangerine, #EF8A17);
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  padding: 6px 18px;
+  font-size: 0.95rem;
+  font-family: var(--default-font, Arial, sans-serif);
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s, opacity 0.2s;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+}
+.add-article-btn:hover,
+.add-article-btn:focus {
+  opacity: 0.85;
+  background: var(--tangerine, #EF8A17);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  outline: none;
+}
+
+.add-article-btn .add-article-text {
+  display: inline;
+}
+
+@media (max-width: 600px) {
+  .add-article-btn .add-article-text {
+    display: none;
+  }
+  .add-article-btn {
+    padding: 6px 10px;
+    min-width: 0;
+  }
+}

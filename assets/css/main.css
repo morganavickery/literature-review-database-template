@@ -1,0 +1,1115 @@
+/**
+* Template Name: iPortfolio
+* Template URL: https://bootstrapmade.com/iportfolio-bootstrap-technologies-websites-template/
+* Updated: Jun 29 2024 with Bootstrap v5.3.3
+* Author: BootstrapMade.com
+* License: https://bootstrapmade.com/license/
+*/
+
+/*--------------------------------------------------------------
+# Font & Color Variables
+# Help: https://bootstrapmade.com/color-system/
+--------------------------------------------------------------*/
+/* Fonts */
+:root {
+  --default-font: "Lato", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --heading-font: "Raleway", sans-serif;
+  --nav-font: "Lato", sans-serif;
+}
+
+
+/* Global Colors - The following color variables are used throughout the website. Updating them here will change the color scheme of the entire website */
+:root {
+  --background-color: #ffffff;
+  /* Background color for the entire website, including individual sections */
+  --default-color: black;
+  /* Default color used for the majority of the text content across the entire website */
+  --heading-color: black;
+  /* Color for headings, subheadings and title throughout the website */
+  --accent-color: #EF8A17;
+  /* Accent color that represents your brand on the website. It's used for buttons, links, and other elements that need to stand out */
+  --surface-color: var(--offwhite)
+    /* The surface color is used as a background of boxed elements within sections, such as cards, icon boxes, or other elements that require a visual separation from the global background. */
+    --contrast-color: #ffffff;
+  /* Contrast color for text, ensuring readability against backgrounds of accent, heading, or default colors. */
+}
+
+/* Nav Menu Colors - The following color variables are used specifically for the navigation menu. They are separate from the global colors to allow for more customization options */
+:root {
+  --nav-color: var(--offwhite)
+    /* The default color of the main navmenu links */
+    --nav-hover-color: var(--offwhite)
+    /* Applied to main navmenu links when they are hovered over or active */
+    --nav-mobile-background-color: #040b14;
+  /* Used as the background color for mobile navigation menu */
+}
+
+/* Color Presets - These classes override global colors when applied to any section or element, providing reuse of the sam color scheme. */
+
+.light-background {
+  --background-color: rgb(239, 138, 23, .2);
+  --surface-color: var(--offwhite);
+}
+
+.dark-background {
+  --background-color: #8F250C;
+  --default-color: #ffffff;
+  --heading-color: #ffffff;
+  --surface-color: var(--sienna);
+  --contrast-color: #ffffff;
+}
+
+/* Smooth scroll */
+:root {
+  scroll-behavior: smooth;
+}
+
+:root {
+  --offwhite: #FBF8C5;
+  --grey: #33392D;
+  --offblack: #071013;
+  --sienna: #8F250C;
+  --tangerine: #EF8A17;
+  /* --bright-teal: #006466;
+  --mid-teal: #065A60;
+  --mid2-teal: #0B525B;
+  --dark-teal: #144552;
+  --deep-blue: #1B3A4B;
+  --deep-navy: #212F45;
+  --deep-indigo: #272640;
+  --deep-indigo-trans1: #27264067;
+  --deep-indigo-trans2: #2726402c;
+  --white: #FFFFFF;
+  --black: #000000;
+  --dark-purp: #312244;
+  --mid-purp: #3E1F47;
+  --bright-purp: #4D194D; */
+}
+
+
+
+
+
+/*----------------------------------------------------------------------------------------------------------------------------------------------------------------
+# DATABASE STYLING
+--------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+@media (max-width: 1199px) {
+ 
+    .header-toggle {
+      display: block;
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      font-size: 24px;
+      background-color: var(--accent-color);
+      color: var(--contrast-color);
+      padding: 10px;
+      border-radius: 50%;
+      cursor: pointer;
+      z-index: 1000;
+    }
+  
+  
+  .header-show {
+      left: 0; /* Show when toggled */
+  }
+  body.menu-open main {
+      margin-left: 300px; /*Push content when menu is open*/
+  }
+}
+
+
+@media (min-width: 1200px) {
+  body.database-page main {
+      margin-left: 300px; /* Adjust main content position */
+  }
+}
+
+.database-hero {
+  width: 100%;
+  min-height: 20vh;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  /* Ensures the pseudo-element doesn't spill out */
+}
+
+.database-hero .container {
+  position: relative;
+  z-index: 3;
+  /* Ensure content is on top of the overlay */
+  color: #ffffff;
+  /* Optional: Ensure text is readable */
+  display: flex;
+  flex-wrap: wrap;
+  /* Allow items to wrap on smaller screens */
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  /* Add spacing between elements */
+  text-align: center;
+  flex: 1;
+  /* Allow the text to take up the remaining space */
+  text-align: left;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  /* margin: 20px; */
+  /* padding: 20px; */
+  background-color: #f8f9fa;
+  color: var(--default-color);
+  background-color: var(--background-color);
+  font-family: var(--default-font);
+}
+
+/*--------------------------------------------------------------
+# General Styling & Shared Classes
+--------------------------------------------------------------*/
+
+a {
+  color: var(--accent-color);
+  text-decoration: none;
+  transition: 0.3s;
+}
+
+a:hover {
+  color: color-mix(in srgb, var(--accent-color), transparent 25%);
+  text-decoration: none;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--heading-font);
+  font-weight: 600;
+  /* Semi Bold */
+}
+
+
+p,
+a,
+li,
+span {
+  font-family: var(--default-font);
+  font-weight: 400;
+  /* Regular */
+}
+
+.navmenu a {
+  font-family: var(--nav-font);
+  font-weight: 700;
+  /* Bold for navigation links */
+}
+
+/*--------------------------------------------------------------
+# Global Header
+--------------------------------------------------------------*/
+.header {
+  color: var(--default-color);
+  background-color: var(--background-color);
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  padding: 0 15px;
+  width: 300px;
+  transition: all ease-in-out 0.3s;
+  overflow-y: auto;
+  z-index: 997;
+  border-right: 1px solid color-mix(in srgb, var(--default-color), transparent 90%);
+}
+
+.header .profile-img img {
+  margin: 15px auto;
+  display: block;
+  width: 120px;
+  border: 8px solid color-mix(in srgb, var(--default-color), transparent 85%);
+}
+
+.header .logo {
+  line-height: 1;
+  margin-bottom: 15px;
+}
+
+.header .logo img {
+  max-height: 32px;
+  margin-right: 8px;
+}
+
+.header .logo h1 {
+  font-size: 24px;
+  margin: 0;
+  font-weight: 700;
+  color: var(--heading-color);
+}
+
+.header .social-links {
+  margin: 0 0 20px 0;
+}
+
+.header .social-links a {
+  font-size: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--default-color), transparent 90%);
+  color: var(--default-color);
+  margin: 0 2px;
+  border-radius: 50%;
+  text-align: center;
+  width: 40px;
+  height: 40px;
+  transition: 0.3s;
+}
+
+.header .social-links a:hover {
+  color: var(--contrast-color);
+  background: var(--accent-color);
+}
+
+@media (min-width: 1200px) {
+
+  .header~main,
+  .header~#footer {
+    margin-left: 300px;
+  }
+}
+
+@media (max-width: 1199px) {
+  .header {
+    left: -100%;
+  }
+}
+
+.header.header-show {
+  left: 0;
+}
+
+.header .header-toggle {
+  color: var(--contrast-color);
+  background-color: var(--accent-color);
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  z-index: 9999;
+  transition: background-color 0.3s;
+}
+
+.header .header-toggle:hover {
+  color: var(--contrast-color);
+  background-color: color-mix(in srgb, var(--accent-color) 90%, white 15%);
+}
+
+/*--------------------------------------------------------------
+# Navigation Menu
+--------------------------------------------------------------*/
+.mobile-nav-toggle {
+}
+
+.navmenu {
+  padding: 0;
+  z-index: 9997;
+}
+
+.navmenu ul {
+  list-style: none;
+  padding: 0 0 20px 0;
+  margin: 0;
+}
+
+.navmenu a,
+.navmenu a:focus {
+  color: var(--contrast-color);
+  padding: 15px 10px;
+  font-family: var(--nav-font);
+  font-size: 16px;
+  font-weight: 400;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  transition: 0.3s;
+  width: 100%;
+}
+
+.navmenu a .navicon,
+.navmenu a:focus .navicon {
+  font-size: 20px;
+  margin-right: 10px;
+}
+
+.navmenu a:hover,
+.navmenu .active,
+.navmenu .active:focus {
+  color: var(--nav-hover-color);
+}
+
+.navmenu a:hover .navicon,
+.navmenu .active .navicon,
+.navmenu .active:focus .navicon {
+  color: var(--accent-color);
+}
+
+/*--------------------------------------------------------------
+# Global Footer
+--------------------------------------------------------------*/
+.footer {
+  color: var(--default-color);
+  background-color: var(--background-color);
+  font-size: 14px;
+  padding: 40px 0;
+  position: relative;
+  border-top: 1px solid color-mix(in srgb, var(--default-color), transparent 90%);
+}
+
+.footer .copyright p {
+  margin-bottom: 0;
+}
+
+.footer .credits {
+  margin-top: 4px;
+  font-size: 13px;
+  text-align: center;
+}
+
+/*--------------------------------------------------------------
+# Preloader
+--------------------------------------------------------------*/
+#preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  overflow: hidden;
+  background: var(--background-color);
+  transition: all 0.6s ease-out;
+}
+
+#preloader:before {
+  content: "";
+  position: fixed;
+  top: calc(50% - 30px);
+  left: calc(50% - 30px);
+  border: 6px solid #ffffff;
+  border-color: var(--accent-color) transparent var(--accent-color) transparent;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  animation: animate-preloader 1.5s linear infinite;
+}
+
+@keyframes animate-preloader {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/*--------------------------------------------------------------
+# Scroll Top Button
+--------------------------------------------------------------*/
+.scroll-top {
+  position: fixed;
+  visibility: hidden;
+  opacity: 0;
+  right: 15px;
+  bottom: -15px;
+  z-index: 99999;
+  background-color: var(--accent-color);
+  width: 44px;
+  height: 44px;
+  border-radius: 50px;
+  transition: all 0.4s;
+  z-index: 0;
+}
+
+.scroll-top i {
+  font-size: 24px;
+  color: var(--contrast-color);
+  line-height: 0;
+  z-index: 2;
+}
+
+.scroll-top:hover {
+  background-color: color-mix(in srgb, var(--accent-color), transparent 20%);
+  color: var(--contrast-color);
+}
+
+.scroll-top.active {
+  visibility: visible;
+  opacity: 1;
+  bottom: 15px;
+}
+
+/*--------------------------------------------------------------
+# Disable aos animation delay on mobile devices
+--------------------------------------------------------------*/
+@media screen and (max-width: 768px) {
+  [data-aos-delay] {
+    transition-delay: 0 !important;
+  }
+}
+
+/*--------------------------------------------------------------
+# Global Page Titles & Breadcrumbs
+--------------------------------------------------------------*/
+.page-title {
+  color: var(--default-color);
+  background-color: var(--background-color);
+  padding: 25px 0;
+  position: relative;
+}
+
+.page-title h1 {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.page-title .breadcrumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.page-title .breadcrumbs ol li+li {
+  padding-left: 10px;
+}
+
+.page-title .breadcrumbs ol li+li::before {
+  content: "/";
+  display: inline-block;
+  padding-right: 10px;
+  color: color-mix(in srgb, var(--default-color), transparent 70%);
+}
+
+/*--------------------------------------------------------------
+# Global Sections
+--------------------------------------------------------------*/
+section,
+.section {
+  color: var(--default-color);
+  background-color: var(--background-color);
+  padding: 40px;
+  overflow: clip;
+}
+
+section .content-container {
+  padding: 10px;
+}
+
+/*--------------------------------------------------------------
+# Global Section Titles
+--------------------------------------------------------------*/
+.section-title {
+  position: relative;
+  align-items: left;
+}
+
+.section-title h2 {
+  font-size: 32px;
+  font-weight: 700;
+  position: relative;
+}
+
+.section-title h2:after {
+  content: "";
+  position: absolute;
+  display: block;
+  width: 50px;
+  height: 3px;
+  background: var(--dark-teal);
+  left: 0;
+  bottom: 0;
+}
+
+.section-title p {
+  margin-bottom: 0;
+}
+
+.content-container p {
+  margin-bottom: 0;
+}
+
+/*--------------------------------------------------------------
+# Hero Section
+--------------------------------------------------------------*/
+.hero {
+  width: 100%;
+  min-height: 50vh;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  /* Ensures the pseudo-element doesn't spill out */
+}
+
+.hero .background-container img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+  /* Place image behind everything */
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(45deg, rgb(143, 37, 12), rgb(143, 37, 12, .75), rgb(143, 37, 12, .5), rgb(239, 138, 23, .5));
+  /* Gradient overlay */
+  z-index: 2;
+  /* Overlay above the image */
+}
+
+.hero .container {
+  position: relative;
+  z-index: 3;
+  /* Ensure content is on top of the overlay */
+  color: #ffffff;
+  /* Optional: Ensure text is readable */
+  display: flex;
+  flex-wrap: wrap;
+  /* Allow items to wrap on smaller screens */
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  /* Add spacing between elements */
+  text-align: center;
+}
+
+.hero .headshot-container {
+  flex: 0 0 auto;
+  /* Ensure the headshot does not grow or shrink */
+  max-width: 250px;
+  /* Limit the width of the headshot */
+  text-align: center;
+}
+
+.hero .headshot-container img {
+  width: 100%;
+  /* Ensure the image scales within its container */
+  height: auto;
+  border: 8px solid color-mix(in srgb, var(--default-color), transparent 85%);
+  object-fit: cover;
+  border-radius: 50%;
+  /* Make it circular if needed */
+}
+
+.hero .text-container {
+  flex: 1;
+  /* Allow the text to take up the remaining space */
+  text-align: left;
+}
+
+.hero h2 {
+  margin: 0;
+  font-size: 48px;
+  /* Adjust font size */
+  font-weight: 700;
+}
+
+.hero p {
+  margin: 10px 0 0 0;
+  font-size: 20px;
+  /* Adjust font size */
+}
+
+.hero p span {
+  letter-spacing: 1px;
+  border-bottom: 2px solid var(--accent-color);
+}
+
+.emphasize {
+  color: var(--contrast-color);
+  font-family: inherit;
+  font-weight: lighter;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .hero {
+    flex-direction: column;
+    /* Stack items vertically */
+    text-align: center;
+  }
+
+  .hero .headshot-container {
+    max-width: 150px;
+    /* Adjust headshot size on smaller screens */
+    margin-bottom: 15px;
+  }
+
+  .hero h2 {
+    font-size: 28px;
+    /* Adjust for smaller screens */
+  }
+
+  .hero p {
+    font-size: 18px;
+    /* Adjust for smaller screens */
+  }
+}
+
+/*--------------------------------------------------------------
+# About Section
+--------------------------------------------------------------*/
+
+.about .content h2 {
+  font-weight: 700;
+  font-size: 24px;
+}
+
+.about-container {
+  padding-bottom: 10px;
+}
+
+.about-list {
+  font-size: smaller;
+}
+
+.about .content ul {
+  list-style: none;
+  padding: 0;
+}
+
+.about .content ul li {
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.about .content ul strong {
+  margin-right: 10px;
+}
+
+.about .content ul i {
+  font-size: 16px;
+  margin-right: 5px;
+  color: var(--accent-color);
+  line-height: 0;
+}
+
+/*--------------------------------------------------------------
+# Tools Section
+--------------------------------------------------------------*/
+
+.tools .tools-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  grid-auto-rows: minmax(auto, auto);
+}
+
+.tools-tile {
+  background-color: rgb(143, 37, 12, .4);
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  height: 80px;
+  padding: 10px 10px 10px 10px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  /* Enables flexible alignment */
+  flex-direction: column;
+  /* Ensures header and content are stacked vertically */
+  align-items: center;
+  /* Centers the content horizontally */
+  justify-content: center;
+  /* Centers the content vertically */
+}
+
+.tools-tile:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.tools-tile .tile-header {
+  display: flex;
+  align-items: center;
+  /* Vertically aligns all elements */
+  justify-content: center;
+  /* Centers content horizontally */
+  gap: 10px;
+  /* Adds spacing between the title and the icon */
+  margin-bottom: 10px;
+  /* Adds spacing below the header */
+}
+
+.tools-tile .tile-header h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  text-align: justify;
+}
+
+.tools-tile .tile-header .bracket-icon-container img {
+  height: 24px;
+  /* Adjust size for brackets */
+  width: auto;
+  /* Keep proportions */
+}
+
+.tools-tile ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tools-tile li {
+  font-size: 0.5rem;
+  line-height: 1.25;
+  font-weight: normal;
+}
+
+
+/*--------------------------------------------------------------
+# SOCIAL BUTTONS 
+--------------------------------------------------------------*/
+.social-button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  height: 40px;
+  background-color: #1da1f2;
+  /* Replace with your desired background color */
+  border-radius: 50%;
+  text-decoration: none;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.social-button:hover {
+  background-color: #0d8bd8;
+  /* Slightly darker shade for hover effect */
+  transform: scale(1.1);
+}
+
+.social-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.contact-container {
+  padding-top: 40px;
+  font-size: smaller;
+  text-align: center;
+}
+
+.contact-container em {
+  color: var(--nav-color)
+}
+
+
+/*--------------------------------------------------------------
+# PROJECTS Section
+--------------------------------------------------------------*/
+.projects .container-tiles-other {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  grid-auto-rows: minmax(100px, auto);
+}
+
+.project-tile {
+  background-color: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 10px;
+  margin: 10px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  align-content: start;
+}
+
+.project-tile:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.project-tile .icon {
+  color: #17a2b8;
+  font-size: 2rem;
+  margin-right: 15px;
+}
+
+.project-tile .title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.project-tile .description {
+  font-size: .7rem;
+  line-height: 1.15;
+  text-align: left;
+  font-weight: 150px;
+  color: #555;
+  padding-bottom: 10px;
+}
+
+.project-tile .role,
+.project-tile .principles {
+  font-size: 0.8rem;
+  font-weight: 200px;
+  color: #333;
+  text-align: right;
+  margin: 0;
+  /* Remove any default margin */
+  padding: 0;
+  /* Remove any default padding */
+}
+
+.project-tile .tile-header {
+  display: flex;
+  justify-content: space-between;
+  /* Ensures the icon and link are on opposite ends */
+  align-items: center;
+  /* Vertically aligns the icon and button */
+  margin-bottom: 10px;
+  /* Adds some spacing below the header */
+}
+
+.project-tile .tile-header .icon {
+  color: #17a2b8;
+  font-size: 2rem;
+  flex-shrink: 0;
+  /* Ensures the icon doesn't resize */
+}
+
+.project-tile .tile-header .tile-link-container {
+  flex-shrink: 0;
+  /* Prevents the container from resizing */
+}
+
+.project-tile .tile-header .tile-link-container a {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #17a2b8;
+  text-decoration: none;
+  border: 1px solid #17a2b8;
+  padding: 5px 10px;
+  border-radius: 4px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.project-tile .tile-header .tile-link-container a:hover {
+  background-color: #17a2b8;
+  color: #fff;
+}
+
+/*--------------------------------------------------------------
+# Technologies Section
+--------------------------------------------------------------*/
+
+.technologies .container-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  grid-auto-rows: minmax(100px, auto);
+}
+
+.technologies .technologies-content {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  height: 300px;
+  background-color: var(--surface-color);
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 20px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Hover effects for tiles */
+.technologies .technologies-content:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.technologies .tile-header h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.technologies .tile-header p {
+  margin: 5px 0 10px;
+  font-size: 0.6rem;
+  text-align: center;
+  color: #6c757d;
+}
+
+.technologies .tile-footer {
+  text-align: center;
+  width: 100%;
+}
+
+.technologies .tile-footer .tile-link {
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--accent-color);
+  border: 1px solid var(--accent-color);
+  padding: 5px 10px;
+  border-radius: 4px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.technologies .tile-footer .tile-link:hover {
+  background-color: var(--accent-color);
+  color: var(--contrast-color);
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+  .technologies .isotope-container {
+    grid-template-columns: 1fr;
+    /* One tile per row on smaller screens */
+  }
+
+  .technologies .technologies-content {
+    height: auto;
+    padding: 15px;
+  }
+}
+
+.custom-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.custom-tile:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.tile-header h4 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.tile-header p {
+  margin: 5px 0 10px;
+  font-size: 0.9rem;
+  text-align: center;
+  color: #6c757d;
+}
+
+.tile-body {
+  margin: 10px 0;
+}
+
+.tile-icon {
+  color: #17a2b8;
+}
+
+.tile-footer .tile-link {
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #17a2b8;
+  border: 1px solid #17a2b8;
+  padding: 5px 10px;
+  border-radius: 4px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.tile-footer .tile-link:hover {
+  background-color: #17a2b8;
+  color: #fff;
+}
+
+/*--------------------------------------------------------------
+# Featured Publications Section
+--------------------------------------------------------------*/
+
+.pubs-list .tile-link {
+  display: inline-flex;
+  /* Ensures the text and icon are inline and aligned properly */
+  align-items: center;
+  /* Vertically centers the icon and text */
+  gap: 4px;
+  /* Adds spacing between text and icon */
+  text-decoration: none;
+  font-size: 0.5rem;
+  font-weight: 500;
+  color: #17a2b8;
+  border: 1px solid #17a2b8;
+  padding: 4px 8px;
+  /* Ensures enough space inside the button */
+  border-radius: 4px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  /* Adds spacing between the paragraph text and the button */
+  white-space: nowrap;
+  /* Prevents wrapping for the text and icon */
+}
+
+.pubs-list .tile-link:hover {
+  background-color: #17a2b8;
+  color: #fff;
+}
+
+.pubs-list .tile-link i {
+  font-size: 0.6rem;
+  /* Adjust icon size */
+}
+
+.pubs-list p {
+  margin: 0;
+  /* Reset default margin */
+  /* padding-left: 20px; */
+  /* Creates space for the hanging indent */
+  text-indent: -20px;
+  /* Negative value aligns the first line to the left */
+  font-size: smaller;
+  /* Optional: Adjust font size */
+  line-height: 1.5;
+  /* Optional: Adjust line spacing */
+  position: relative;
+}
+
+.pubs-list p a {
+  display: inline-block;
+  /* Ensures the link stays inline */
+  margin-left: 10px;
+  /* Adds space between text and the link */
+  text-indent: 0;
+  /* Prevents hanging indent from affecting the link */
+  vertical-align: middle;
+  /* Aligns the link with the text */
+}
