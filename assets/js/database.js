@@ -29,6 +29,8 @@ let activeFilters = {};
 let filterLabels = {};
 let infoLabels = {};
 let expandedCardKey = null;
+let venueOptions = [];
+let activeVenues = new Set();
 
 const debouncedUpdateFilterCounts = debounce(updateFilterCounts, 100);
 
@@ -43,6 +45,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   database = await loadDatabase();
   generateFilters(database, filterLabels);
+  initializeVenueFilters(database);
   renderCards(database, filterLabels, infoLabels);
   updateFilterCounts();
 
@@ -372,6 +375,17 @@ function createDetailTextSection(label, value) {
 
 function getFilteredData(data) {
   return data.filter((item) => {
+    if (venueOptions.length > 0) {
+      if (activeVenues.size === 0) {
+        return false;
+      }
+
+      const venueName = normalizeVenue(item.venue);
+      if (!activeVenues.has(venueName)) {
+        return false;
+      }
+    }
+
     return FILTER_KEYS.every((key) => {
       const active = activeFilters[key];
       if (!active || active.length === 0) return true;
@@ -432,6 +446,7 @@ function setupResetButton() {
       });
 
     activeFilters = createEmptyFilterState();
+    resetVenueFilters();
     expandedCardKey = null;
     renderCards(database, filterLabels, infoLabels);
     updateFilterCounts();
@@ -590,6 +605,81 @@ function getColumnValue(columns, headerMap, key) {
   const index = headerMap[key];
   if (typeof index !== "number") return "";
   return columns[index]?.trim() || "";
+}
+
+function initializeVenueFilters(data) {
+  venueOptions = getUniqueVenues(data);
+  activeVenues = new Set(venueOptions);
+  renderVenueTags(venueOptions);
+}
+
+function renderVenueTags(venues) {
+  const container = document.getElementById("venue-tags");
+  const section = document.querySelector(".venue-filter-section");
+  if (!container || !section) return;
+
+  container.innerHTML = "";
+
+  if (!venues || venues.length === 0) {
+    section.setAttribute("hidden", "");
+    return;
+  }
+
+  section.removeAttribute("hidden");
+
+  venues.forEach((venue) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "venue-tag";
+    const isActive = activeVenues.has(venue);
+    button.classList.toggle("venue-tag--active", isActive);
+    button.classList.toggle("venue-tag--inactive", !isActive);
+    button.textContent = venue;
+    button.dataset.venue = venue;
+    button.setAttribute("aria-pressed", isActive ? "true" : "false");
+    button.addEventListener("click", () => {
+      toggleVenueFilter(venue);
+    });
+
+    container.appendChild(button);
+  });
+}
+
+function toggleVenueFilter(venue) {
+  if (activeVenues.has(venue)) {
+    activeVenues.delete(venue);
+  } else {
+    activeVenues.add(venue);
+  }
+
+  renderVenueTags(venueOptions);
+  expandedCardKey = null;
+  renderCards(database, filterLabels, infoLabels);
+  debouncedUpdateFilterCounts();
+}
+
+function resetVenueFilters() {
+  activeVenues = new Set(venueOptions);
+  renderVenueTags(venueOptions);
+}
+
+function getUniqueVenues(data) {
+  const venues = new Set();
+  data.forEach((item) => {
+    const normalized = normalizeVenue(item.venue);
+    if (normalized) {
+      venues.add(normalized);
+    }
+  });
+
+  return Array.from(venues).sort((a, b) =>
+    a.localeCompare(b, undefined, { sensitivity: "base" })
+  );
+}
+
+function normalizeVenue(value) {
+  const trimmed = (value || "").trim();
+  return trimmed.length > 0 ? trimmed : "No Venue Specified";
 }
 
 function isObject(item) {
