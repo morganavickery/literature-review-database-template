@@ -67,19 +67,20 @@ async function loadDatabase() {
     const parsed = dataRows
       .map((row) => {
         const columns = parseCSVRow(row);
-        if (columns.length < 5) return null;
+        if (columns.length < 12) return null;
         return {
           title: decodeEntities(columns[0]?.trim() || ""),
           authors_abbrev: decodeEntities(columns[1]?.trim() || ""),
-          venue: decodeEntities(columns[2]?.trim() || ""),
-          abstract: decodeEntities(columns[3]?.trim() || ""),
-          doi_link: columns[4]?.trim() || "",
-          filter1: decodeEntities(columns[5]?.trim() || ""),
-          filter2: decodeEntities(columns[6]?.trim() || ""),
-          filter3: decodeEntities(columns[7]?.trim() || ""),
-          info1: decodeEntities(columns[8]?.trim() || ""),
-          info2: decodeEntities(columns[9]?.trim() || ""),
-          info3: decodeEntities(columns[10]?.trim() || "")
+          year: decodeEntities(columns[2]?.trim() || ""),
+          venue: decodeEntities(columns[3]?.trim() || ""),
+          abstract: decodeEntities(columns[4]?.trim() || ""),
+          doi_link: columns[5]?.trim() || "",
+          filter1: decodeEntities(columns[6]?.trim() || ""),
+          filter2: decodeEntities(columns[7]?.trim() || ""),
+          filter3: decodeEntities(columns[8]?.trim() || ""),
+          info1: decodeEntities(columns[9]?.trim() || ""),
+          info2: decodeEntities(columns[10]?.trim() || ""),
+          info3: decodeEntities(columns[11]?.trim() || "")
         };
       })
       .filter((item) => item !== null);
@@ -240,6 +241,7 @@ function createCardElement(item, filterLabelsMap, infoLabelsMap) {
   const safeTitle = escapeHTML(item.title || "Untitled Paper");
   const metaParts = [];
   if (item.authors_abbrev) metaParts.push(escapeHTML(item.authors_abbrev));
+  if (item.year) metaParts.push(escapeHTML(item.year));
   if (item.venue) metaParts.push(escapeHTML(item.venue));
   const cardMeta = metaParts.join(" • ");
 
@@ -310,7 +312,12 @@ function createCardElement(item, filterLabelsMap, infoLabelsMap) {
 }
 
 function getCardKey(item) {
-  return [item.title || "", item.authors_abbrev || "", item.doi_link || ""].join("::");
+  return [
+    item.title || "",
+    item.authors_abbrev || "",
+    item.year || "",
+    item.doi_link || ""
+  ].join("::");
 }
 
 function createTagSection(label, values) {
