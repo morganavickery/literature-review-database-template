@@ -245,10 +245,6 @@ function createCardElement(item, filterLabelsMap, infoLabelsMap) {
   if (item.venue) metaParts.push(escapeHTML(item.venue));
   const cardMeta = metaParts.join(" • ");
 
-  const abstractPreview = item.abstract
-    ? escapeHTML(truncateText(item.abstract, 220))
-    : "";
-
   const filterTags = FILTER_KEYS.map((key) =>
     createTagSection(filterLabelsMap[key], item[key])
   )
@@ -277,7 +273,6 @@ function createCardElement(item, filterLabelsMap, infoLabelsMap) {
     </div>
     <div class="card-title">${safeTitle}</div>
     ${filterTags ? `<div class="card-tags">${filterTags}</div>` : ""}
-    ${abstractPreview ? `<p class="card-abstract">${abstractPreview}</p>` : ""}
     ${expandedDetails}
   `;
 
