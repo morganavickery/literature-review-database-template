@@ -123,6 +123,64 @@ HERO SECTION
   z-index: -1;
 }
 
+.venue-filter-section {
+  margin-top: 15px;
+  padding: 10px 15px 15px;
+  background-color: rgba(211, 208, 203, 0.6);
+  border-radius: 8px;
+}
+
+.venue-filter-section[hidden] {
+  display: none;
+}
+
+.venue-filter-section h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.venue-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.venue-tag {
+  border: 1px solid var(--grey);
+  background-color: rgba(255, 255, 255, 0.9);
+  color: var(--grey);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  text-transform: none;
+}
+
+.venue-tag:hover {
+  border-color: var(--sienna);
+  color: var(--sienna);
+}
+
+.venue-tag:focus {
+  outline: 2px solid var(--sienna);
+  outline-offset: 2px;
+}
+
+.venue-tag--active {
+  background-color: var(--sienna);
+  border-color: var(--sienna);
+  color: var(--contrast-color);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.venue-tag--inactive {
+  opacity: 0.6;
+}
+
 /* Each filter group */
 .filter-group {
   flex: 1;
