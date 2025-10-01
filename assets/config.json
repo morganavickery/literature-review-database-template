@@ -14,7 +14,11 @@
     },
     "filter3": {
       "label": "Filter 3"
+    },
+    "filter4": {
+      "label": "Filter 4"
     }
+
   },
   "infoFields": {
     "info1": {
