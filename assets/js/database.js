@@ -20,12 +20,12 @@ const defaultConfig = {
   }
 };
 
-const FILTER_KEYS = ["filter1", "filter2", "filter3"];
+let FILTER_KEYS = Object.keys(defaultConfig.filters || {});
 const INFO_KEYS = ["info1", "info2", "info3"];
 
 let appConfig = cloneObject(defaultConfig);
 let database = [];
-let activeFilters = createEmptyFilterState();
+let activeFilters = {};
 let filterLabels = {};
 let infoLabels = {};
 let expandedCardKey = null;
@@ -34,8 +34,11 @@ const debouncedUpdateFilterCounts = debounce(updateFilterCounts, 100);
 
 document.addEventListener("DOMContentLoaded", async () => {
   await loadConfig();
+  FILTER_KEYS = getFilterKeys(appConfig);
   filterLabels = buildFilterLabels(appConfig);
   infoLabels = buildInfoLabels(appConfig);
+  renderFilterGroups(FILTER_KEYS, filterLabels);
+  activeFilters = createEmptyFilterState();
   applyConfig(appConfig, filterLabels);
 
   database = await loadDatabase();
@@ -61,27 +64,50 @@ async function loadDatabase() {
     const text = await response.text();
     const utf8decoder = new TextDecoder("utf-8");
     const decodedText = utf8decoder.decode(new TextEncoder().encode(text));
-    const rows = decodedText.trim().split(/\r?\n/);
+    const rows = decodedText
+      .split(/\r?\n/)
+      .map((row) => row.trim())
+      .filter((row) => row.length > 0);
+
+    if (rows.length === 0) {
+      return [];
+    }
+
+    const headerRow = parseCSVRow(rows[0]);
+    const headerMap = headerRow.reduce((acc, header, index) => {
+      const key = header?.trim();
+      if (key) {
+        acc[key] = index;
+      }
+      return acc;
+    }, {});
+
     const dataRows = rows.slice(1);
 
     const parsed = dataRows
       .map((row) => {
         const columns = parseCSVRow(row);
-        if (columns.length < 12) return null;
-        return {
-          title: decodeEntities(columns[0]?.trim() || ""),
-          authors_abbrev: decodeEntities(columns[1]?.trim() || ""),
-          year: decodeEntities(columns[2]?.trim() || ""),
-          venue: decodeEntities(columns[3]?.trim() || ""),
-          abstract: decodeEntities(columns[4]?.trim() || ""),
-          doi_link: columns[5]?.trim() || "",
-          filter1: decodeEntities(columns[6]?.trim() || ""),
-          filter2: decodeEntities(columns[7]?.trim() || ""),
-          filter3: decodeEntities(columns[8]?.trim() || ""),
-          info1: decodeEntities(columns[9]?.trim() || ""),
-          info2: decodeEntities(columns[10]?.trim() || ""),
-          info3: decodeEntities(columns[11]?.trim() || "")
+        if (!columns || columns.length === 0) return null;
+
+        const record = {
+          title: decodeEntities(getColumnValue(columns, headerMap, "title")),
+          authors_abbrev: decodeEntities(
+            getColumnValue(columns, headerMap, "authors_abbrev")
+          ),
+          year: decodeEntities(getColumnValue(columns, headerMap, "year")),
+          venue: decodeEntities(getColumnValue(columns, headerMap, "venue")),
+          abstract: decodeEntities(getColumnValue(columns, headerMap, "abstract")),
+          doi_link: getColumnValue(columns, headerMap, "doi_link"),
+          info1: decodeEntities(getColumnValue(columns, headerMap, "info1")),
+          info2: decodeEntities(getColumnValue(columns, headerMap, "info2")),
+          info3: decodeEntities(getColumnValue(columns, headerMap, "info3"))
         };
+
+        FILTER_KEYS.forEach((key) => {
+          record[key] = decodeEntities(getColumnValue(columns, headerMap, key));
+        });
+
+        return record;
       })
       .filter((item) => item !== null);
 
@@ -531,6 +557,44 @@ function mergeDeep(target, source) {
   });
 
   return output;
+}
+
+function getFilterKeys(config) {
+  const configFilters = config?.filters && Object.keys(config.filters);
+  if (configFilters && configFilters.length > 0) {
+    return configFilters;
+  }
+  return Object.keys(defaultConfig.filters || {});
+}
+
+function renderFilterGroups(filterKeys, labels) {
+  const filtersSection = document.querySelector(".filters");
+  if (!filtersSection) return;
+
+  filtersSection.innerHTML = "";
+
+  filterKeys.forEach((key) => {
+    const group = document.createElement("div");
+    group.className = "filter-group";
+
+    const heading = document.createElement("h3");
+    heading.dataset.configFilter = key;
+    heading.textContent = labels[key] || key;
+    group.appendChild(heading);
+
+    const options = document.createElement("div");
+    options.id = `${key}-filters`;
+    options.className = "filter-options";
+    group.appendChild(options);
+
+    filtersSection.appendChild(group);
+  });
+}
+
+function getColumnValue(columns, headerMap, key) {
+  const index = headerMap[key];
+  if (typeof index !== "number") return "";
+  return columns[index]?.trim() || "";
 }
 
 function isObject(item) {
