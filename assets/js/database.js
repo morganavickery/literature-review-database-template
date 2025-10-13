@@ -36,11 +36,19 @@ const debouncedUpdateFilterCounts = debounce(updateFilterCounts, 100);
 
 document.addEventListener("DOMContentLoaded", async () => {
   await loadConfig();
-  filterLabels = buildFilterLabels(appConfig);
+
+  const { records, filters } = await loadDatabase();
+
+  FILTER_KEYS = mergeFilterKeys(Object.keys(appConfig?.filters || {}), filters);
+  filterLabels = buildFilterLabels(appConfig, FILTER_KEYS);
   infoLabels = buildInfoLabels(appConfig);
+
+  renderFilterPanels(FILTER_KEYS, filterLabels);
   applyConfig(appConfig, filterLabels);
 
+  activeFilters = createEmptyFilterState();
   database = ensureRecordsIncludeFilters(records, FILTER_KEYS);
+
   generateFilters(database, filterLabels);
   initializeVenueFilters(database);
   renderCards(database, filterLabels, infoLabels);
@@ -64,27 +72,42 @@ async function loadDatabase() {
     const text = await response.text();
     const utf8decoder = new TextDecoder("utf-8");
     const decodedText = utf8decoder.decode(new TextEncoder().encode(text));
-    const rows = decodedText.trim().split(/\r?\n/);
-    const dataRows = rows.slice(1);
+    const rows = decodedText.trim().split(/\r?\n/).filter((row) => row.trim().length > 0);
 
-    const parsed = dataRows
+    if (rows.length === 0) {
+      return { records: [], filters: [] };
+    }
+
+    const headerRow = parseCSVRow(rows[0]);
+    const headerMap = buildHeaderMap(headerRow);
+    const csvFilterKeys = extractFilterKeys(headerMap);
+
+    const parsed = rows
+      .slice(1)
       .map((row) => {
         const columns = parseCSVRow(row);
-        if (columns.length < 12) return null;
-        return {
-          title: decodeEntities(columns[0]?.trim() || ""),
-          authors_abbrev: decodeEntities(columns[1]?.trim() || ""),
-          year: decodeEntities(columns[2]?.trim() || ""),
-          venue: decodeEntities(columns[3]?.trim() || ""),
-          abstract: decodeEntities(columns[4]?.trim() || ""),
-          doi_link: columns[5]?.trim() || "",
-          filter1: decodeEntities(columns[6]?.trim() || ""),
-          filter2: decodeEntities(columns[7]?.trim() || ""),
-          filter3: decodeEntities(columns[8]?.trim() || ""),
-          info1: decodeEntities(columns[9]?.trim() || ""),
-          info2: decodeEntities(columns[10]?.trim() || ""),
-          info3: decodeEntities(columns[11]?.trim() || "")
+        if (columns.length === 0 || columns.every((value) => value.trim().length === 0)) {
+          return null;
+        }
+
+        const record = {
+          title: decodeEntities(getColumnValue(columns, headerMap, "title")),
+          authors_abbrev: decodeEntities(getColumnValue(columns, headerMap, "authors_abbrev")),
+          year: decodeEntities(getColumnValue(columns, headerMap, "year")),
+          venue: decodeEntities(getColumnValue(columns, headerMap, "venue")),
+          abstract: decodeEntities(getColumnValue(columns, headerMap, "abstract")),
+          doi_link: getColumnValue(columns, headerMap, "doi_link")
         };
+
+        csvFilterKeys.forEach((key) => {
+          record[key] = decodeEntities(getColumnValue(columns, headerMap, key));
+        });
+
+        INFO_KEYS.forEach((key) => {
+          record[key] = decodeEntities(getColumnValue(columns, headerMap, key));
+        });
+
+        return record;
       })
       .filter((item) => item !== null);
 
@@ -126,6 +149,29 @@ function parseCSVRow(row) {
 
   result.push(current.trim());
   return result;
+}
+
+function buildHeaderMap(headers = []) {
+  return headers.reduce((map, header, index) => {
+    const trimmed = typeof header === "string" ? header.trim() : "";
+    if (trimmed.length > 0) {
+      map[trimmed] = index;
+    }
+    return map;
+  }, {});
+}
+
+function getColumnValue(columns, headerMap, key) {
+  if (!key || !headerMap || !Object.prototype.hasOwnProperty.call(headerMap, key)) {
+    return "";
+  }
+
+  const index = headerMap[key];
+  if (index === undefined || index === null) {
+    return "";
+  }
+
+  return columns[index]?.trim() || "";
 }
 
 function extractFilterKeys(headerMap) {
@@ -206,6 +252,31 @@ function getDefaultFilterLabel(key, index) {
     return `Filter ${parseInt(match[0], 10)}`;
   }
   return `Filter ${index + 1}`;
+}
+
+function renderFilterPanels(filterKeys, labels) {
+  const filtersContainer = document.querySelector(".filters");
+  if (!filtersContainer) return;
+
+  filtersContainer.innerHTML = "";
+
+  filterKeys.forEach((key, index) => {
+    const group = document.createElement("div");
+    group.className = "filter-group";
+
+    const heading = document.createElement("h3");
+    heading.setAttribute("data-config-filter", key);
+    heading.textContent = labels[key] || getDefaultFilterLabel(key, index);
+
+    const options = document.createElement("div");
+    options.className = "filter-options";
+    options.id = `${key}-filters`;
+
+    group.appendChild(heading);
+    group.appendChild(options);
+
+    filtersContainer.appendChild(group);
+  });
 }
 
 function generateFilters(data, labels) {
@@ -486,6 +557,81 @@ function updateFilterCounts() {
         }
       });
   });
+}
+
+function initializeVenueFilters(data) {
+  const venueContainer = document.getElementById("venue-tags");
+  const venueSection = document.querySelector(".venue-filter-section");
+  if (!venueContainer || !Array.isArray(data)) return;
+
+  const venueMap = new Map();
+  data.forEach((item) => {
+    const label = (item?.venue || "").trim();
+    if (label.length === 0) return;
+    const normalized = normalizeVenue(label);
+    if (!venueMap.has(normalized)) {
+      venueMap.set(normalized, label);
+    }
+  });
+
+  venueOptions = Array.from(venueMap.entries())
+    .map(([normalized, label]) => ({ normalized, label }))
+    .sort((a, b) => a.label.localeCompare(b.label));
+
+  if (venueOptions.length === 0) {
+    venueContainer.innerHTML = "";
+    venueSection?.setAttribute("hidden", "true");
+    activeVenues = new Set();
+    return;
+  }
+
+  venueSection?.removeAttribute("hidden");
+  venueContainer.innerHTML = "";
+  activeVenues = new Set(venueOptions.map((option) => option.normalized));
+
+  venueOptions.forEach((option) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "venue-tag venue-tag--active";
+    button.dataset.venue = option.normalized;
+    button.textContent = option.label;
+    button.addEventListener("click", () => {
+      toggleVenueSelection(option.normalized, button);
+    });
+    venueContainer.appendChild(button);
+  });
+}
+
+function toggleVenueSelection(normalizedName, element) {
+  if (!normalizedName) return;
+
+  const isActive = activeVenues.has(normalizedName);
+  if (isActive) {
+    activeVenues.delete(normalizedName);
+  } else {
+    activeVenues.add(normalizedName);
+  }
+
+  setVenueTagState(element, !isActive);
+  renderCards(database, filterLabels, infoLabels);
+  debouncedUpdateFilterCounts();
+}
+
+function resetVenueFilters() {
+  activeVenues = new Set(venueOptions.map((option) => option.normalized));
+  document.querySelectorAll(".venue-tag").forEach((tag) => {
+    setVenueTagState(tag, true);
+  });
+}
+
+function setVenueTagState(element, isActive) {
+  if (!element) return;
+  element.classList.toggle("venue-tag--active", isActive);
+  element.classList.toggle("venue-tag--inactive", !isActive);
+}
+
+function normalizeVenue(value) {
+  return (value || "").trim().toLowerCase();
 }
 
 function setupResetButton() {
