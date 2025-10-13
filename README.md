@@ -51,7 +51,7 @@ title,authors_abbrev,year,venue,abstract,doi_link,filter1,filter2,filter3,info1,
 * Each row becomes one card on the page.
 * Use semicolons (e.g., `theory; practice`) inside any filter column to give a paper more than one tag — the filters understand this automatically.
 * Leave optional columns blank when you do not need them; the page hides empty fields for you.
-* The `filter` columns feed the filter panels, and their display names come from `config.json`. Add as many `filterX` columns (and matching config entries) as you need.
+* The `filter` columns feed the filter panels, and their display names come from `config.json`. Add as many `filterX` columns as you need — the page will create matching panels automatically and fall back to generic labels if no custom name is provided.
 * The three `info` columns populate the expandable details area, each labelled via `config.json`.
 * When you finish editing in Google Sheets, export as **CSV** and replace the existing `assets/database.csv` file.
 
