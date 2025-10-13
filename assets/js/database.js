@@ -20,12 +20,12 @@ const defaultConfig = {
   }
 };
 
-const FILTER_KEYS = ["filter1", "filter2", "filter3"];
+let FILTER_KEYS = Object.keys(defaultConfig.filters || {});
 const INFO_KEYS = ["info1", "info2", "info3"];
 
 let appConfig = cloneObject(defaultConfig);
 let database = [];
-let activeFilters = createEmptyFilterState();
+let activeFilters = {};
 let filterLabels = {};
 let infoLabels = {};
 let expandedCardKey = null;
@@ -34,11 +34,18 @@ const debouncedUpdateFilterCounts = debounce(updateFilterCounts, 100);
 
 document.addEventListener("DOMContentLoaded", async () => {
   await loadConfig();
-  filterLabels = buildFilterLabels(appConfig);
+  const { records, filters: csvFilterKeys } = await loadDatabase();
+
+  const configFilterKeys = getFilterKeys(appConfig);
+  FILTER_KEYS = mergeFilterKeys(configFilterKeys, csvFilterKeys);
+  filterLabels = buildFilterLabels(appConfig, FILTER_KEYS);
   infoLabels = buildInfoLabels(appConfig);
+
+  renderFilterGroups(FILTER_KEYS, filterLabels);
+  activeFilters = createEmptyFilterState();
   applyConfig(appConfig, filterLabels);
 
-  database = await loadDatabase();
+  database = ensureRecordsIncludeFilters(records, FILTER_KEYS);
   generateFilters(database, filterLabels);
   renderCards(database, filterLabels, infoLabels);
   updateFilterCounts();
@@ -61,35 +68,60 @@ async function loadDatabase() {
     const text = await response.text();
     const utf8decoder = new TextDecoder("utf-8");
     const decodedText = utf8decoder.decode(new TextEncoder().encode(text));
-    const rows = decodedText.trim().split(/\r?\n/);
+    const rows = decodedText
+      .split(/\r?\n/)
+      .map((row) => row.trim())
+      .filter((row) => row.length > 0);
+
+    if (rows.length === 0) {
+      return { records: [], filters: [] };
+    }
+
+    const headerRow = parseCSVRow(rows[0]);
+    const headerMap = headerRow.reduce((acc, header, index) => {
+      const key = header?.trim();
+      if (key) {
+        acc[key] = index;
+      }
+      return acc;
+    }, {});
+
+    const csvFilterKeys = extractFilterKeys(headerMap);
+
     const dataRows = rows.slice(1);
 
     const parsed = dataRows
       .map((row) => {
         const columns = parseCSVRow(row);
-        if (columns.length < 12) return null;
-        return {
-          title: decodeEntities(columns[0]?.trim() || ""),
-          authors_abbrev: decodeEntities(columns[1]?.trim() || ""),
-          year: decodeEntities(columns[2]?.trim() || ""),
-          venue: decodeEntities(columns[3]?.trim() || ""),
-          abstract: decodeEntities(columns[4]?.trim() || ""),
-          doi_link: columns[5]?.trim() || "",
-          filter1: decodeEntities(columns[6]?.trim() || ""),
-          filter2: decodeEntities(columns[7]?.trim() || ""),
-          filter3: decodeEntities(columns[8]?.trim() || ""),
-          info1: decodeEntities(columns[9]?.trim() || ""),
-          info2: decodeEntities(columns[10]?.trim() || ""),
-          info3: decodeEntities(columns[11]?.trim() || "")
+        if (!columns || columns.length === 0) return null;
+
+        const record = {
+          title: decodeEntities(getColumnValue(columns, headerMap, "title")),
+          authors_abbrev: decodeEntities(
+            getColumnValue(columns, headerMap, "authors_abbrev")
+          ),
+          year: decodeEntities(getColumnValue(columns, headerMap, "year")),
+          venue: decodeEntities(getColumnValue(columns, headerMap, "venue")),
+          abstract: decodeEntities(getColumnValue(columns, headerMap, "abstract")),
+          doi_link: getColumnValue(columns, headerMap, "doi_link"),
+          info1: decodeEntities(getColumnValue(columns, headerMap, "info1")),
+          info2: decodeEntities(getColumnValue(columns, headerMap, "info2")),
+          info3: decodeEntities(getColumnValue(columns, headerMap, "info3"))
         };
+
+        csvFilterKeys.forEach((key) => {
+          record[key] = decodeEntities(getColumnValue(columns, headerMap, key));
+        });
+
+        return record;
       })
       .filter((item) => item !== null);
 
-    return parsed;
+    return { records: parsed, filters: csvFilterKeys };
   } catch (error) {
     showErrorMessage();
     console.error("Failed to load database:", error);
-    return [];
+    return { records: [], filters: [] };
   }
 }
 
@@ -123,6 +155,86 @@ function parseCSVRow(row) {
 
   result.push(current.trim());
   return result;
+}
+
+function extractFilterKeys(headerMap) {
+  if (!headerMap) return [];
+  const keys = Object.keys(headerMap).filter((key) => isFilterKey(key));
+  return sortFilterKeys(keys);
+}
+
+function mergeFilterKeys(configKeys = [], csvKeys = []) {
+  const merged = [];
+  const seen = new Set();
+
+  const addKey = (key) => {
+    if (typeof key !== "string") return;
+    const trimmed = key.trim();
+    if (trimmed.length === 0) return;
+    const normalized = trimmed.toLowerCase();
+    if (seen.has(normalized)) return;
+    seen.add(normalized);
+    merged.push(trimmed);
+  };
+
+  configKeys.forEach(addKey);
+
+  sortFilterKeys(csvKeys).forEach((key) => {
+    if (!isFilterKey(key)) return;
+    addKey(key);
+  });
+
+  if (merged.length === 0) {
+    Object.keys(defaultConfig.filters || {}).forEach(addKey);
+  }
+
+  return merged;
+}
+
+function ensureRecordsIncludeFilters(records, filterKeys) {
+  if (!Array.isArray(records)) return [];
+  const keysToUse = Array.isArray(filterKeys) ? filterKeys : [];
+  return records.map((record) => {
+    const normalized = { ...record };
+    keysToUse.forEach((key) => {
+      if (!Object.prototype.hasOwnProperty.call(normalized, key)) {
+        normalized[key] = "";
+      }
+    });
+    return normalized;
+  });
+}
+
+function sortFilterKeys(keys = []) {
+  return keys
+    .filter((key) => typeof key === "string")
+    .map((key) => key.trim())
+    .filter((key) => key.length > 0)
+    .sort((a, b) => {
+      const indexA = getFilterIndex(a);
+      const indexB = getFilterIndex(b);
+      if (indexA !== indexB) {
+        return indexA - indexB;
+      }
+      return a.localeCompare(b);
+    });
+}
+
+function getFilterIndex(key) {
+  const match = key && key.match(/\d+/);
+  return match ? parseInt(match[0], 10) : Number.MAX_SAFE_INTEGER;
+}
+
+function isFilterKey(key) {
+  return typeof key === "string" && /^filter\d+$/i.test(key.trim());
+}
+
+function getDefaultFilterLabel(key, index) {
+  const match = typeof key === "string" ? key.match(/\d+/) : null;
+  if (match) {
+    return `Filter ${parseInt(match[0], 10)}`;
+  }
+  return `Filter ${index + 1}`;
 }
 
 function generateFilters(data, labels) {
@@ -445,10 +557,11 @@ async function loadConfig() {
   appConfig = mergedConfig;
 }
 
-function buildFilterLabels(config) {
+function buildFilterLabels(config, keys) {
   const labels = {};
-  FILTER_KEYS.forEach((key, index) => {
-    const fallback = defaultConfig.filters[key]?.label || `Filter ${index + 1}`;
+  const keysToUse = Array.isArray(keys) && keys.length > 0 ? keys : FILTER_KEYS;
+  keysToUse.forEach((key, index) => {
+    const fallback = defaultConfig.filters[key]?.label || getDefaultFilterLabel(key, index);
     const override = config?.filters?.[key]?.label;
     labels[key] = typeof override === "string" && override.trim().length > 0 ? override.trim() : fallback;
   });
@@ -531,6 +644,44 @@ function mergeDeep(target, source) {
   });
 
   return output;
+}
+
+function getFilterKeys(config) {
+  const configFilters = config?.filters && Object.keys(config.filters);
+  if (configFilters && configFilters.length > 0) {
+    return configFilters;
+  }
+  return Object.keys(defaultConfig.filters || {});
+}
+
+function renderFilterGroups(filterKeys, labels) {
+  const filtersSection = document.querySelector(".filters");
+  if (!filtersSection) return;
+
+  filtersSection.innerHTML = "";
+
+  filterKeys.forEach((key) => {
+    const group = document.createElement("div");
+    group.className = "filter-group";
+
+    const heading = document.createElement("h3");
+    heading.dataset.configFilter = key;
+    heading.textContent = labels[key] || key;
+    group.appendChild(heading);
+
+    const options = document.createElement("div");
+    options.id = `${key}-filters`;
+    options.className = "filter-options";
+    group.appendChild(options);
+
+    filtersSection.appendChild(group);
+  });
+}
+
+function getColumnValue(columns, headerMap, key) {
+  const index = headerMap[key];
+  if (typeof index !== "number") return "";
+  return columns[index]?.trim() || "";
 }
 
 function isObject(item) {

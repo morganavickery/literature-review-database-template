@@ -20,6 +20,7 @@ Edit `assets/config.json` in any text editor. Each field is plain English; updat
 | `filters.filter1.label` | Heading for the first filter column. |
 | `filters.filter2.label` | Heading for the second filter column. |
 | `filters.filter3.label` | Heading for the third filter column. |
+| `filters.filterX.label` | Add more entries (e.g., `filter4`, `filter5`, …) to create additional filter panels. |
 | `infoFields.info1.label` | Heading used in the card details for the first info field. |
 | `infoFields.info2.label` | Heading used in the card details for the second info field. |
 | `infoFields.info3.label` | Heading used in the card details for the third info field. |
@@ -33,10 +34,10 @@ Edit `assets/config.json` in any text editor. Each field is plain English; updat
 
 ## 2. Update the Literature Database
 
-`assets/database.csv` is the only data source the page reads. You can edit it in Excel, Google Sheets, or any CSV-friendly tool. Keep the header row exactly as-is so the app can map each column correctly:
+`assets/database.csv` is the only data source the page reads. You can edit it in Excel, Google Sheets, or any CSV-friendly tool. Keep the existing column names so the app can map each column correctly; add more `filter` columns if you introduce additional filters in `config.json`.
 
 ```
-title,authors_abbrev,venue,abstract,doi_link,filter1,filter2,filter3,info1,info2,info3
+title,authors_abbrev,year,venue,abstract,doi_link,filter1,filter2,filter3,info1,info2,info3
 ```
 
 * Copy this starter template into your spreadsheet (the first row must remain the header above):
@@ -50,7 +51,7 @@ title,authors_abbrev,venue,abstract,doi_link,filter1,filter2,filter3,info1,info2
 * Each row becomes one card on the page.
 * Use semicolons (e.g., `theory; practice`) inside any filter column to give a paper more than one tag — the filters understand this automatically.
 * Leave optional columns blank when you do not need them; the page hides empty fields for you.
-* The three `filter` columns feed the filter panels, and their display names come from `config.json`.
+* The `filter` columns feed the filter panels, and their display names come from `config.json`. Add as many `filterX` columns as you need — the page will create matching panels automatically and fall back to generic labels if no custom name is provided.
 * The three `info` columns populate the expandable details area, each labelled via `config.json`.
 * When you finish editing in Google Sheets, export as **CSV** and replace the existing `assets/database.csv` file.
 
