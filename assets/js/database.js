@@ -32,8 +32,22 @@ let infoLabels = {};
 let expandedCardKey = null;
 let venueOptions = [];
 let activeVenues = new Set();
+const VENUE_FILTER_KEY = "venueFilter";
+const VENUE_FILTER_LABEL = "Venues";
 
 const debouncedUpdateFilterCounts = debounce(updateFilterCounts, 100);
+
+const TAG_PREFIX_REGEX = /^(?:\[[^\]]+\]\s*)+/i;
+
+const FILTER_OPTION_MIN_FONT_SIZE = 8;
+const filterTextContainers = new Set();
+let filterTextFitScheduled = false;
+
+function getDisplayTagValue(value) {
+  if (typeof value !== "string") return "";
+  const cleaned = value.replace(TAG_PREFIX_REGEX, "").trim();
+  return cleaned;
+}
 
 document.addEventListener("DOMContentLoaded", async () => {
   await loadConfig();
@@ -44,11 +58,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   filterLabels = buildFilterLabels(appConfig, FILTER_KEYS);
   infoLabels = buildInfoLabels(appConfig);
 
-  renderFilterPanels(FILTER_KEYS, filterLabels);
-  applyConfig(appConfig, filterLabels);
-
   activeFilters = createEmptyFilterState();
   filterVisibility = createDefaultFilterVisibility();
+  filterVisibility[VENUE_FILTER_KEY] = true;
+
+  renderFilterPanels(FILTER_KEYS, filterLabels);
+  applyConfig(appConfig, filterLabels);
   database = ensureRecordsIncludeFilters(records, FILTER_KEYS);
 
   generateFilters(database, filterLabels);
@@ -59,6 +74,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupResetButton();
   setupFilterToggle();
 });
+
+window.addEventListener("resize", scheduleRefitAllFilterTexts);
 
 function createEmptyFilterState() {
   return FILTER_KEYS.reduce((acc, key) => {
@@ -394,6 +411,70 @@ function renderFilterPanels(filterKeys, labels) {
       handleFilterGroupToggle(key, isEnabled);
     });
   });
+
+  renderVenueFilterPanel(toggleList, cardGrid);
+}
+
+function renderVenueFilterPanel(toggleList, cardGrid) {
+  if (!toggleList || !cardGrid) return;
+
+  if (typeof filterVisibility[VENUE_FILTER_KEY] === "undefined") {
+    filterVisibility[VENUE_FILTER_KEY] = true;
+  }
+
+  const isEnabled = Boolean(filterVisibility[VENUE_FILTER_KEY]);
+
+  const toggleRow = document.createElement("div");
+  toggleRow.className = "filter-toggle-row";
+  toggleRow.dataset.filterToggleRow = VENUE_FILTER_KEY;
+
+  const nameSpan = document.createElement("span");
+  nameSpan.className = "filter-toggle-name";
+  nameSpan.textContent = VENUE_FILTER_LABEL;
+
+  const toggleLabel = document.createElement("label");
+  toggleLabel.className = "filter-toggle";
+
+  const toggle = document.createElement("input");
+  toggle.type = "checkbox";
+  toggle.checked = isEnabled;
+  toggle.dataset.filterToggle = VENUE_FILTER_KEY;
+  toggle.setAttribute("aria-label", `Toggle ${VENUE_FILTER_LABEL} filter`);
+
+  const slider = document.createElement("span");
+  slider.className = "filter-toggle-slider";
+
+  toggleLabel.appendChild(toggle);
+  toggleLabel.appendChild(slider);
+
+  toggleRow.appendChild(nameSpan);
+  toggleRow.appendChild(toggleLabel);
+  toggleList.appendChild(toggleRow);
+
+  const card = document.createElement("div");
+  card.className = "filter-group filter-card venue-filter-card";
+  card.dataset.filterGroup = VENUE_FILTER_KEY;
+
+  const heading = document.createElement("h3");
+  heading.className = "filter-card-title";
+  heading.textContent = VENUE_FILTER_LABEL;
+
+  const options = document.createElement("div");
+  options.className = "filter-options";
+  options.id = "venue-filter-options";
+  options.setAttribute("role", "group");
+  options.setAttribute("aria-label", "Filter by venue");
+
+  card.appendChild(heading);
+  card.appendChild(options);
+  cardGrid.appendChild(card);
+
+  setFilterGroupState(VENUE_FILTER_KEY, isEnabled);
+
+  toggle.addEventListener("change", (event) => {
+    const enabled = event.target.checked;
+    handleFilterGroupToggle(VENUE_FILTER_KEY, enabled);
+  });
 }
 
 function generateFilters(data, labels) {
@@ -411,7 +492,9 @@ function generateFilters(data, labels) {
       });
     });
 
-    const sortedValues = Object.keys(counts).sort((a, b) => a.localeCompare(b));
+    const sortedValues = Object.keys(counts).sort((a, b) => {
+      return getDisplayTagValue(a).localeCompare(getDisplayTagValue(b));
+    });
 
     if (sortedValues.length === 0) {
       group?.classList.add("filter-group--empty");
@@ -426,8 +509,13 @@ function generateFilters(data, labels) {
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
       checkbox.value = value;
-      checkbox.id = `${key}-${value.replace(/\s+/g, "-").toLowerCase()}`;
-      checkbox.setAttribute("aria-label", `${headingLabel || "Filter"}: ${value}`);
+      const checkboxId = `${key}-${value.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`;
+      checkbox.id = checkboxId;
+      const displayValue = getDisplayTagValue(value);
+      checkbox.setAttribute(
+        "aria-label",
+        `${headingLabel || "Filter"}: ${displayValue || value}`
+      );
       checkbox.disabled = !filterVisibility[key];
       checkbox.addEventListener("change", () => {
         handleFilterChange(key, value);
@@ -438,7 +526,8 @@ function generateFilters(data, labels) {
       label.appendChild(checkbox);
 
       const textSpan = document.createElement("span");
-      textSpan.textContent = ` ${value} `;
+      textSpan.className = "filter-option-text";
+      textSpan.textContent = displayValue || value;
       label.appendChild(textSpan);
 
       const countSpan = document.createElement("span");
@@ -448,6 +537,64 @@ function generateFilters(data, labels) {
 
       container.appendChild(label);
     });
+
+    scheduleFilterOptionFit(container);
+  });
+}
+
+function scheduleFilterOptionFit(container) {
+  if (!container) return;
+  filterTextContainers.add(container);
+  requestAnimationFrame(() => {
+    fitFilterOptionText(container);
+  });
+}
+
+function scheduleRefitAllFilterTexts() {
+  if (filterTextFitScheduled) return;
+  filterTextFitScheduled = true;
+  requestAnimationFrame(() => {
+    filterTextContainers.forEach((container) => {
+      fitFilterOptionText(container);
+    });
+    filterTextFitScheduled = false;
+  });
+}
+
+function fitFilterOptionText(container) {
+  if (!container) return;
+
+  const textNodes = container.querySelectorAll(".filter-option-text");
+  textNodes.forEach((span) => {
+    if (!span.dataset.baseFontSize) {
+      const computedSize = parseFloat(window.getComputedStyle(span).fontSize);
+      span.dataset.baseFontSize = Number.isFinite(computedSize) ? String(computedSize) : "14";
+    }
+    const baseFontSize = parseFloat(span.dataset.baseFontSize) || 14;
+    span.style.fontSize = `${baseFontSize}px`;
+  });
+
+  textNodes.forEach((span) => {
+    const label = span.closest("label");
+    if (!label || label.offsetParent === null) return;
+
+    const baseFontSize = parseFloat(span.dataset.baseFontSize) || 14;
+    const minFontSize = Math.max(FILTER_OPTION_MIN_FONT_SIZE, baseFontSize - 6);
+    let currentSize = baseFontSize;
+    span.style.fontSize = `${currentSize}px`;
+
+    let iteration = 0;
+    while (span.scrollWidth > span.clientWidth && currentSize > minFontSize && iteration < 12) {
+      currentSize -= 0.5;
+      span.style.fontSize = `${currentSize}px`;
+      iteration++;
+    }
+
+    if (span.scrollWidth > span.clientWidth) {
+      span.title = span.textContent.trim();
+    } else {
+      span.removeAttribute("title");
+    }
   });
 }
 
@@ -519,17 +666,21 @@ function createCardElement(item, filterLabelsMap, infoLabelsMap) {
   }
 
   const safeTitle = escapeHTML(item.title || "Untitled Paper");
-  const metaParts = [];
-  if (item.authors_abbrev) metaParts.push(escapeHTML(item.authors_abbrev));
-  if (item.year) metaParts.push(escapeHTML(item.year));
-  if (item.venue) metaParts.push(escapeHTML(item.venue));
-  const cardMeta = metaParts.join(" • ");
+  const metaLineParts = [];
+  if (item.authors_abbrev) metaLineParts.push(escapeHTML(item.authors_abbrev));
+  if (item.year) metaLineParts.push(escapeHTML(item.year));
+  const primaryMeta = metaLineParts.join(" • ");
+  const venueMeta = item.venue ? escapeHTML(item.venue) : "";
+  const cardMetaParts = [];
+  if (primaryMeta) {
+    cardMetaParts.push(`<span class="card-meta-primary">${primaryMeta}</span>`);
+  }
+  if (venueMeta) {
+    cardMetaParts.push(`<span class="card-meta-venue">${venueMeta}</span>`);
+  }
+  const cardMetaHTML = cardMetaParts.join("");
 
-  const filterTags = FILTER_KEYS.map((key) =>
-    createTagSection(filterLabelsMap[key], item[key])
-  )
-    .filter(Boolean)
-    .join("");
+  const filterTags = createCombinedTagSection(item);
 
   const abstractSection = createDetailTextSection("Abstract", item.abstract);
   const infoSections = INFO_KEYS.map((key) =>
@@ -548,7 +699,7 @@ function createCardElement(item, filterLabelsMap, infoLabelsMap) {
 
   card.innerHTML = `
     <div class="card-header">
-      <div>${cardMeta ? `<p class="card-meta">${cardMeta}</p>` : ""}</div>
+      <div>${cardMetaHTML ? `<p class="card-meta">${cardMetaHTML}</p>` : ""}</div>
       ${hasDOI ? `<div class="doi-flag" tabindex="0" role="button" aria-label="Open paper in new tab">Access Paper</div>` : ""}
     </div>
     <div class="card-title">${safeTitle}</div>
@@ -611,6 +762,29 @@ function createTagSection(label, values) {
   `;
 }
 
+function createCombinedTagSection(item) {
+  const allValues = FILTER_KEYS.flatMap((key) => getItemValues(item[key]));
+  const seen = new Set();
+  const tags = [];
+
+  allValues.forEach((value) => {
+    const displayValue = getDisplayTagValue(value);
+    if (!displayValue) return;
+    const normalized = displayValue.toLowerCase();
+    if (seen.has(normalized)) return;
+    seen.add(normalized);
+    tags.push(displayValue);
+  });
+
+  if (tags.length === 0) return "";
+
+  const sortedTags = tags.sort((a, b) => a.localeCompare(b));
+
+  return `<div class="tag-container">${sortedTags
+    .map((tag) => `<span class="tag">${escapeHTML(tag)}</span>`)
+    .join("")}</div>`;
+}
+
 function createDetailTextSection(label, value) {
   if (!value || value.trim() === "" || value.trim() === "-") return "";
   const safeValue = escapeHTML(value.trim());
@@ -626,7 +800,8 @@ function createDetailTextSection(label, value) {
 
 function getFilteredData(data) {
   return data.filter((item) => {
-    if (venueOptions.length > 0) {
+    const isVenueFilterEnabled = filterVisibility[VENUE_FILTER_KEY] !== false;
+    if (isVenueFilterEnabled && venueOptions.length > 0) {
       if (activeVenues.size === 0) {
         return false;
       }
@@ -689,6 +864,43 @@ function updateFilterCounts() {
         checkbox.disabled = !groupVisible;
       });
   });
+
+  const venueGroupVisible = filterVisibility[VENUE_FILTER_KEY] !== false;
+  const venueCounts = {};
+  filteredData.forEach((item) => {
+    const normalizedVenue = normalizeVenue(item.venue);
+    if (normalizedVenue) {
+      venueCounts[normalizedVenue] = (venueCounts[normalizedVenue] || 0) + 1;
+    }
+  });
+
+  const venueContainer = document.getElementById("venue-filter-options");
+  if (venueContainer) {
+    venueContainer.querySelectorAll("label").forEach((label) => {
+      const checkbox = label.querySelector("input[type='checkbox']");
+      const countSpan = label.querySelector(".filter-count");
+      if (!checkbox || !countSpan) return;
+
+      const normalizedVenue = checkbox.value.trim();
+      const count = venueCounts[normalizedVenue] || 0;
+      countSpan.textContent = `[${count}]`;
+
+      if (count === 0 || !venueGroupVisible) {
+        label.classList.add("disabled-filter");
+      } else {
+        label.classList.remove("disabled-filter");
+      }
+
+      checkbox.disabled = !venueGroupVisible;
+      if (!venueGroupVisible) {
+        checkbox.setAttribute("aria-disabled", "true");
+      } else {
+        checkbox.removeAttribute("aria-disabled");
+      }
+    });
+  }
+
+  scheduleRefitAllFilterTexts();
 }
 
 function handleFilterGroupToggle(key, isEnabled) {
@@ -700,6 +912,7 @@ function handleFilterGroupToggle(key, isEnabled) {
 }
 
 function setFilterGroupState(key, isEnabled) {
+  const isVenueFilter = key === VENUE_FILTER_KEY;
   filterVisibility[key] = isEnabled;
   const group = document.querySelector(`.filter-group[data-filter-group='${key}']`);
   const toggleRow = document.querySelector(`.filter-toggle-row[data-filter-toggle-row='${key}']`);
@@ -733,24 +946,38 @@ function setFilterGroupState(key, isEnabled) {
     optionsContainer.setAttribute("aria-hidden", String(!isEnabled));
   }
 
-  group.querySelectorAll(".filter-options input[type='checkbox']").forEach((checkbox) => {
-    checkbox.disabled = !isEnabled;
-    if (!isEnabled) {
-      checkbox.checked = false;
-    }
-  });
+  if (!isVenueFilter) {
+    group
+      .querySelectorAll(".filter-options input[type='checkbox']")
+      .forEach((checkbox) => {
+        checkbox.disabled = !isEnabled;
+        if (!isEnabled) {
+          checkbox.checked = false;
+        }
+      });
 
-  if (!isEnabled) {
-    activeFilters[key] = [];
+    if (!isEnabled && Object.prototype.hasOwnProperty.call(activeFilters, key)) {
+      activeFilters[key] = [];
+    }
+    scheduleRefitAllFilterTexts();
+    return;
   }
+
+  setVenueFilterEnabledState(isEnabled);
+  if (!isEnabled) {
+    resetVenueFilters();
+  }
+  scheduleRefitAllFilterTexts();
 }
 
 function initializeVenueFilters(data) {
-  const venueContainer = document.getElementById("venue-tags");
-  const venueSection = document.querySelector(".venue-filter-section");
+  const venueContainer = document.getElementById("venue-filter-options");
+  const venueCard = document.querySelector(`.filter-group[data-filter-group='${VENUE_FILTER_KEY}']`);
+  const toggleRow = document.querySelector(`.filter-toggle-row[data-filter-toggle-row='${VENUE_FILTER_KEY}']`);
   if (!venueContainer || !Array.isArray(data)) return;
 
   const venueMap = new Map();
+  const venueCounts = new Map();
   data.forEach((item) => {
     const label = (item?.venue || "").trim();
     if (label.length === 0) return;
@@ -758,6 +985,7 @@ function initializeVenueFilters(data) {
     if (!venueMap.has(normalized)) {
       venueMap.set(normalized, label);
     }
+    venueCounts.set(normalized, (venueCounts.get(normalized) || 0) + 1);
   });
 
   venueOptions = Array.from(venueMap.entries())
@@ -766,54 +994,91 @@ function initializeVenueFilters(data) {
 
   if (venueOptions.length === 0) {
     venueContainer.innerHTML = "";
-    venueSection?.setAttribute("hidden", "true");
     activeVenues = new Set();
+    venueCard?.classList.add("filter-group--empty");
+    venueCard?.setAttribute("hidden", "true");
+    toggleRow?.setAttribute("hidden", "true");
     return;
   }
 
-  venueSection?.removeAttribute("hidden");
+  toggleRow?.removeAttribute("hidden");
+  venueCard?.classList.remove("filter-group--empty");
+  venueCard?.removeAttribute("hidden");
   venueContainer.innerHTML = "";
   activeVenues = new Set(venueOptions.map((option) => option.normalized));
 
   venueOptions.forEach((option) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "venue-tag venue-tag--active";
-    button.dataset.venue = option.normalized;
-    button.textContent = option.label;
-    button.addEventListener("click", () => {
-      toggleVenueSelection(option.normalized, button);
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.value = option.normalized;
+    const checkboxId = `venue-${option.normalized.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`;
+    checkbox.id = checkboxId;
+    checkbox.checked = true;
+    checkbox.dataset.venue = option.normalized;
+    checkbox.setAttribute("aria-label", `${VENUE_FILTER_LABEL}: ${option.label}`);
+    checkbox.addEventListener("change", (event) => {
+      handleVenueCheckboxChange(option.normalized, event.target.checked);
     });
-    venueContainer.appendChild(button);
+
+    const label = document.createElement("label");
+    label.className = "venue-filter-option";
+    label.htmlFor = checkboxId;
+    label.appendChild(checkbox);
+
+    const textSpan = document.createElement("span");
+    textSpan.className = "filter-option-text";
+    textSpan.textContent = option.label;
+    label.appendChild(textSpan);
+
+    const countSpan = document.createElement("span");
+    countSpan.className = "filter-count";
+    countSpan.textContent = `[${venueCounts.get(option.normalized) || 0}]`;
+    label.appendChild(countSpan);
+
+    venueContainer.appendChild(label);
   });
-}
 
-function toggleVenueSelection(normalizedName, element) {
-  if (!normalizedName) return;
-
-  const isActive = activeVenues.has(normalizedName);
-  if (isActive) {
-    activeVenues.delete(normalizedName);
-  } else {
-    activeVenues.add(normalizedName);
-  }
-
-  setVenueTagState(element, !isActive);
-  renderCards(database, filterLabels, infoLabels);
-  debouncedUpdateFilterCounts();
+  const isEnabled = filterVisibility[VENUE_FILTER_KEY] !== false;
+  setFilterGroupState(VENUE_FILTER_KEY, isEnabled);
+  scheduleFilterOptionFit(venueContainer);
 }
 
 function resetVenueFilters() {
   activeVenues = new Set(venueOptions.map((option) => option.normalized));
-  document.querySelectorAll(".venue-tag").forEach((tag) => {
-    setVenueTagState(tag, true);
-  });
+  document
+    .querySelectorAll("#venue-filter-options input[type='checkbox']")
+    .forEach((checkbox) => {
+      checkbox.checked = true;
+    });
 }
 
-function setVenueTagState(element, isActive) {
-  if (!element) return;
-  element.classList.toggle("venue-tag--active", isActive);
-  element.classList.toggle("venue-tag--inactive", !isActive);
+function setVenueFilterEnabledState(isEnabled) {
+  document
+    .querySelectorAll("#venue-filter-options input[type='checkbox']")
+    .forEach((checkbox) => {
+      checkbox.disabled = !isEnabled;
+      if (isEnabled) {
+        checkbox.removeAttribute("aria-disabled");
+      } else {
+        checkbox.setAttribute("aria-disabled", "true");
+      }
+    });
+}
+
+function handleVenueCheckboxChange(normalizedName, isChecked) {
+  if (!normalizedName || filterVisibility[VENUE_FILTER_KEY] === false) {
+    return;
+  }
+
+  if (isChecked) {
+    activeVenues.add(normalizedName);
+  } else {
+    activeVenues.delete(normalizedName);
+  }
+
+  expandedCardKey = null;
+  renderCards(database, filterLabels, infoLabels);
+  debouncedUpdateFilterCounts();
 }
 
 function normalizeVenue(value) {
