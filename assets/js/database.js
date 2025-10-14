@@ -124,6 +124,7 @@ function showErrorMessage() {
   if (container) {
     container.innerHTML = '<div class="error-message">Couldn’t load data. Please try again later.</div>';
   }
+  updateArticlesCount(0);
 }
 
 function parseCSVRow(row) {
@@ -352,6 +353,7 @@ function renderCards(data, filterLabelsMap, infoLabelsMap) {
   if (!container) return;
 
   const filteredData = getFilteredData(data);
+  updateArticlesCount(filteredData.length);
 
   if (filteredData.length === 0) {
     expandedCardKey = null;
@@ -376,6 +378,13 @@ function renderCards(data, filterLabelsMap, infoLabelsMap) {
   if (!hasExpandedCard) {
     expandedCardKey = null;
   }
+}
+
+function updateArticlesCount(count) {
+  const countElement = document.getElementById("articles-count");
+  if (!countElement) return;
+
+  countElement.textContent = `${count} articles found`;
 }
 
 function createCardElement(item, filterLabelsMap, infoLabelsMap) {
