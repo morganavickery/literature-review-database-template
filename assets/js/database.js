@@ -26,6 +26,7 @@ const INFO_KEYS = ["info1", "info2", "info3"];
 let appConfig = cloneObject(defaultConfig);
 let database = [];
 let activeFilters = {};
+let filterVisibility = {};
 let filterLabels = {};
 let infoLabels = {};
 let expandedCardKey = null;
@@ -47,6 +48,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   applyConfig(appConfig, filterLabels);
 
   activeFilters = createEmptyFilterState();
+  filterVisibility = createDefaultFilterVisibility();
   database = ensureRecordsIncludeFilters(records, FILTER_KEYS);
 
   generateFilters(database, filterLabels);
@@ -61,6 +63,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 function createEmptyFilterState() {
   return FILTER_KEYS.reduce((acc, key) => {
     acc[key] = [];
+    return acc;
+  }, {});
+}
+
+function createDefaultFilterVisibility() {
+  return FILTER_KEYS.reduce((acc, key) => {
+    acc[key] = true;
     return acc;
   }, {});
 }
@@ -264,19 +273,52 @@ function renderFilterPanels(filterKeys, labels) {
   filterKeys.forEach((key, index) => {
     const group = document.createElement("div");
     group.className = "filter-group";
+    group.dataset.filterGroup = key;
+
+    if (typeof filterVisibility[key] === "undefined") {
+      filterVisibility[key] = true;
+    }
+
+    const header = document.createElement("div");
+    header.className = "filter-header";
 
     const heading = document.createElement("h3");
     heading.setAttribute("data-config-filter", key);
     heading.textContent = labels[key] || getDefaultFilterLabel(key, index);
 
+    const toggleLabel = document.createElement("label");
+    toggleLabel.className = "filter-toggle";
+
+    const toggle = document.createElement("input");
+    toggle.type = "checkbox";
+    toggle.checked = Boolean(filterVisibility[key]);
+    toggle.dataset.filterToggle = key;
+    toggle.setAttribute("aria-label", `Toggle ${heading.textContent} filter`);
+
+    const slider = document.createElement("span");
+    slider.className = "filter-toggle-slider";
+
+    toggleLabel.appendChild(toggle);
+    toggleLabel.appendChild(slider);
+
+    header.appendChild(heading);
+    header.appendChild(toggleLabel);
+
     const options = document.createElement("div");
     options.className = "filter-options";
     options.id = `${key}-filters`;
 
-    group.appendChild(heading);
+    group.appendChild(header);
     group.appendChild(options);
 
     filtersContainer.appendChild(group);
+
+    setFilterGroupState(key, toggle.checked);
+
+    toggle.addEventListener("change", (event) => {
+      const isEnabled = event.target.checked;
+      handleFilterGroupToggle(key, isEnabled);
+    });
   });
 }
 
@@ -312,6 +354,7 @@ function generateFilters(data, labels) {
       checkbox.value = value;
       checkbox.id = `${key}-${value.replace(/\s+/g, "-").toLowerCase()}`;
       checkbox.setAttribute("aria-label", `${headingLabel || "Filter"}: ${value}`);
+      checkbox.disabled = !filterVisibility[key];
       checkbox.addEventListener("change", () => {
         handleFilterChange(key, value);
       });
@@ -522,6 +565,9 @@ function getFilteredData(data) {
 
     return FILTER_KEYS.every((key) => {
       const active = activeFilters[key];
+      if (!filterVisibility[key]) {
+        return true;
+      }
       if (!active || active.length === 0) return true;
       const values = getItemValues(item[key]);
       return active.some((selected) => values.includes(selected));
@@ -541,6 +587,7 @@ function updateFilterCounts() {
   const filteredData = getFilteredData(database);
 
   FILTER_KEYS.forEach((key) => {
+    const groupVisible = filterVisibility[key];
     const counts = {};
     filteredData.forEach((item) => {
       getItemValues(item[key]).forEach((value) => {
@@ -559,13 +606,48 @@ function updateFilterCounts() {
         const count = counts[filterValue] || 0;
         countSpan.textContent = `[${count}]`;
 
-        if (count === 0) {
+        if (count === 0 || !groupVisible) {
           label.classList.add("disabled-filter");
         } else {
           label.classList.remove("disabled-filter");
         }
+
+        checkbox.disabled = !groupVisible;
       });
   });
+}
+
+function handleFilterGroupToggle(key, isEnabled) {
+  setFilterGroupState(key, isEnabled);
+
+  expandedCardKey = null;
+  renderCards(database, filterLabels, infoLabels);
+  updateFilterCounts();
+}
+
+function setFilterGroupState(key, isEnabled) {
+  filterVisibility[key] = isEnabled;
+  const group = document.querySelector(`.filter-group[data-filter-group='${key}']`);
+  if (!group) return;
+
+  group.classList.toggle("filter-group--collapsed", !isEnabled);
+
+  const optionsContainer = group.querySelector(".filter-options");
+  if (optionsContainer) {
+    optionsContainer.hidden = !isEnabled;
+    optionsContainer.setAttribute("aria-hidden", String(!isEnabled));
+  }
+
+  group.querySelectorAll(".filter-options input[type='checkbox']").forEach((checkbox) => {
+    checkbox.disabled = !isEnabled;
+    if (!isEnabled) {
+      checkbox.checked = false;
+    }
+  });
+
+  if (!isEnabled) {
+    activeFilters[key] = [];
+  }
 }
 
 function initializeVenueFilters(data) {
@@ -655,6 +737,16 @@ function setupResetButton() {
       });
 
     activeFilters = createEmptyFilterState();
+    filterVisibility = createDefaultFilterVisibility();
+
+    document
+      .querySelectorAll(".filter-toggle input[type='checkbox']")
+      .forEach((toggle) => {
+        const key = toggle.dataset.filterToggle;
+        toggle.checked = true;
+        setFilterGroupState(key, true);
+      });
+
     resetVenueFilters();
     expandedCardKey = null;
     renderCards(database, filterLabels, infoLabels);
