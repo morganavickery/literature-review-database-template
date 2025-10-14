@@ -7,16 +7,19 @@
   },
   "filters": {
     "filter1": {
-      "label": "Filter 1"
+      "label": "Frameworks"
     },
     "filter2": {
-      "label": "Filter 2"
+      "label": "Pedagogies"
     },
     "filter3": {
-      "label": "Filter 3"
+      "label": "Methods"
     },
     "filter4": {
-      "label": "Filter 4"
+      "label": "Contexts"
+    },
+    "filter5": {
+      "label": "Constructs"
     }
 
   },
