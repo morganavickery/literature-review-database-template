@@ -268,23 +268,70 @@ function renderFilterPanels(filterKeys, labels) {
   const filtersContainer = document.querySelector(".filters");
   if (!filtersContainer) return;
 
-  filtersContainer.innerHTML = "";
+  let toggleList = filtersContainer.querySelector(".filter-toggle-list");
+  if (!toggleList) {
+    toggleList = document.createElement("div");
+    toggleList.className = "filter-toggle-list";
+    filtersContainer.appendChild(toggleList);
+  }
+  if (!toggleList.hasAttribute("role")) {
+    toggleList.setAttribute("role", "group");
+    toggleList.setAttribute("aria-label", "Filter categories");
+  }
+
+  let cardGrid = filtersContainer.querySelector(".filter-card-grid");
+  if (!cardGrid) {
+    cardGrid = document.createElement("div");
+    cardGrid.className = "filter-card-grid";
+    filtersContainer.appendChild(cardGrid);
+  }
+
+  toggleList.innerHTML = "";
+  cardGrid.innerHTML = "";
 
   filterKeys.forEach((key, index) => {
-    const group = document.createElement("div");
-    group.className = "filter-group";
-    group.dataset.filterGroup = key;
-
     if (typeof filterVisibility[key] === "undefined") {
       filterVisibility[key] = true;
     }
 
-    const header = document.createElement("div");
-    header.className = "filter-header";
+    const displayLabel = labels[key] || getDefaultFilterLabel(key, index);
+
+    const toggleRow = document.createElement("div");
+    toggleRow.className = "filter-toggle-row";
+    toggleRow.dataset.filterToggleRow = key;
+
+    const nameSpan = document.createElement("span");
+    nameSpan.className = "filter-toggle-name";
+    nameSpan.setAttribute("data-config-filter", key);
+    nameSpan.textContent = displayLabel;
+
+    const toggleLabel = document.createElement("label");
+    toggleLabel.className = "filter-toggle";
+
+    const toggle = document.createElement("input");
+    toggle.type = "checkbox";
+    toggle.checked = Boolean(filterVisibility[key]);
+    toggle.dataset.filterToggle = key;
+    toggle.setAttribute("aria-label", `Toggle ${displayLabel} filter`);
+
+    const slider = document.createElement("span");
+    slider.className = "filter-toggle-slider";
+
+    toggleLabel.appendChild(toggle);
+    toggleLabel.appendChild(slider);
+
+    toggleRow.appendChild(nameSpan);
+    toggleRow.appendChild(toggleLabel);
+    toggleList.appendChild(toggleRow);
+
+    const card = document.createElement("div");
+    card.className = "filter-group filter-card";
+    card.dataset.filterGroup = key;
 
     const heading = document.createElement("h3");
+    heading.className = "filter-card-title";
     heading.setAttribute("data-config-filter", key);
-    heading.textContent = labels[key] || getDefaultFilterLabel(key, index);
+    heading.textContent = displayLabel;
 
     const toggleLabel = document.createElement("label");
     toggleLabel.className = "filter-toggle";
@@ -308,10 +355,9 @@ function renderFilterPanels(filterKeys, labels) {
     options.className = "filter-options";
     options.id = `${key}-filters`;
 
-    group.appendChild(header);
-    group.appendChild(options);
-
-    filtersContainer.appendChild(group);
+    card.appendChild(heading);
+    card.appendChild(options);
+    cardGrid.appendChild(card);
 
     setFilterGroupState(key, toggle.checked);
 
@@ -628,9 +674,30 @@ function handleFilterGroupToggle(key, isEnabled) {
 function setFilterGroupState(key, isEnabled) {
   filterVisibility[key] = isEnabled;
   const group = document.querySelector(`.filter-group[data-filter-group='${key}']`);
+  const toggleRow = document.querySelector(`.filter-toggle-row[data-filter-toggle-row='${key}']`);
+  const toggleInput = document.querySelector(`.filter-toggle input[data-filter-toggle='${key}']`);
+
+  if (toggleInput && toggleInput.checked !== isEnabled) {
+    toggleInput.checked = isEnabled;
+  }
+
+  if (toggleRow) {
+    toggleRow.classList.toggle("filter-toggle-row--disabled", !isEnabled);
+    if (isEnabled) {
+      toggleRow.removeAttribute("aria-disabled");
+    } else {
+      toggleRow.setAttribute("aria-disabled", "true");
+    }
+  }
+
   if (!group) return;
 
   group.classList.toggle("filter-group--collapsed", !isEnabled);
+  if (isEnabled) {
+    group.removeAttribute("hidden");
+  } else {
+    group.setAttribute("hidden", "true");
+  }
 
   const optionsContainer = group.querySelector(".filter-options");
   if (optionsContainer) {
@@ -835,10 +902,9 @@ function applyConfig(config, filterLabelsMap) {
   }
 
   FILTER_KEYS.forEach((key) => {
-    const heading = document.querySelector(`[data-config-filter="${key}"]`);
-    if (heading) {
+    document.querySelectorAll(`[data-config-filter="${key}"]`).forEach((heading) => {
       heading.textContent = filterLabelsMap[key] || heading.textContent;
-    }
+    });
   });
 
   const faviconLink = document.querySelector("link[rel='icon']");
