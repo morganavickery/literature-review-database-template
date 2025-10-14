@@ -35,6 +35,14 @@ let activeVenues = new Set();
 
 const debouncedUpdateFilterCounts = debounce(updateFilterCounts, 100);
 
+const TAG_PREFIX_REGEX = /^(?:\[[^\]]+\]\s*)+/i;
+
+function getDisplayTagValue(value) {
+  if (typeof value !== "string") return "";
+  const cleaned = value.replace(TAG_PREFIX_REGEX, "").trim();
+  return cleaned;
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   await loadConfig();
 
@@ -411,7 +419,9 @@ function generateFilters(data, labels) {
       });
     });
 
-    const sortedValues = Object.keys(counts).sort((a, b) => a.localeCompare(b));
+    const sortedValues = Object.keys(counts).sort((a, b) => {
+      return getDisplayTagValue(a).localeCompare(getDisplayTagValue(b));
+    });
 
     if (sortedValues.length === 0) {
       group?.classList.add("filter-group--empty");
@@ -426,8 +436,13 @@ function generateFilters(data, labels) {
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
       checkbox.value = value;
-      checkbox.id = `${key}-${value.replace(/\s+/g, "-").toLowerCase()}`;
-      checkbox.setAttribute("aria-label", `${headingLabel || "Filter"}: ${value}`);
+      const checkboxId = `${key}-${value.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`;
+      checkbox.id = checkboxId;
+      const displayValue = getDisplayTagValue(value);
+      checkbox.setAttribute(
+        "aria-label",
+        `${headingLabel || "Filter"}: ${displayValue || value}`
+      );
       checkbox.disabled = !filterVisibility[key];
       checkbox.addEventListener("change", () => {
         handleFilterChange(key, value);
@@ -438,7 +453,7 @@ function generateFilters(data, labels) {
       label.appendChild(checkbox);
 
       const textSpan = document.createElement("span");
-      textSpan.textContent = ` ${value} `;
+      textSpan.textContent = ` ${displayValue || value} `;
       label.appendChild(textSpan);
 
       const countSpan = document.createElement("span");
@@ -519,17 +534,21 @@ function createCardElement(item, filterLabelsMap, infoLabelsMap) {
   }
 
   const safeTitle = escapeHTML(item.title || "Untitled Paper");
-  const metaParts = [];
-  if (item.authors_abbrev) metaParts.push(escapeHTML(item.authors_abbrev));
-  if (item.year) metaParts.push(escapeHTML(item.year));
-  if (item.venue) metaParts.push(escapeHTML(item.venue));
-  const cardMeta = metaParts.join(" • ");
+  const metaLineParts = [];
+  if (item.authors_abbrev) metaLineParts.push(escapeHTML(item.authors_abbrev));
+  if (item.year) metaLineParts.push(escapeHTML(item.year));
+  const primaryMeta = metaLineParts.join(" • ");
+  const venueMeta = item.venue ? escapeHTML(item.venue) : "";
+  const cardMetaParts = [];
+  if (primaryMeta) {
+    cardMetaParts.push(`<span class="card-meta-primary">${primaryMeta}</span>`);
+  }
+  if (venueMeta) {
+    cardMetaParts.push(`<span class="card-meta-venue">${venueMeta}</span>`);
+  }
+  const cardMetaHTML = cardMetaParts.join("");
 
-  const filterTags = FILTER_KEYS.map((key) =>
-    createTagSection(filterLabelsMap[key], item[key])
-  )
-    .filter(Boolean)
-    .join("");
+  const filterTags = createCombinedTagSection(item);
 
   const abstractSection = createDetailTextSection("Abstract", item.abstract);
   const infoSections = INFO_KEYS.map((key) =>
@@ -548,7 +567,7 @@ function createCardElement(item, filterLabelsMap, infoLabelsMap) {
 
   card.innerHTML = `
     <div class="card-header">
-      <div>${cardMeta ? `<p class="card-meta">${cardMeta}</p>` : ""}</div>
+      <div>${cardMetaHTML ? `<p class="card-meta">${cardMetaHTML}</p>` : ""}</div>
       ${hasDOI ? `<div class="doi-flag" tabindex="0" role="button" aria-label="Open paper in new tab">Access Paper</div>` : ""}
     </div>
     <div class="card-title">${safeTitle}</div>
@@ -609,6 +628,29 @@ function createTagSection(label, values) {
       <div class="tag-container">${tagsHTML}</div>
     </div>
   `;
+}
+
+function createCombinedTagSection(item) {
+  const allValues = FILTER_KEYS.flatMap((key) => getItemValues(item[key]));
+  const seen = new Set();
+  const tags = [];
+
+  allValues.forEach((value) => {
+    const displayValue = getDisplayTagValue(value);
+    if (!displayValue) return;
+    const normalized = displayValue.toLowerCase();
+    if (seen.has(normalized)) return;
+    seen.add(normalized);
+    tags.push(displayValue);
+  });
+
+  if (tags.length === 0) return "";
+
+  const sortedTags = tags.sort((a, b) => a.localeCompare(b));
+
+  return `<div class="tag-container">${sortedTags
+    .map((tag) => `<span class="tag">${escapeHTML(tag)}</span>`)
+    .join("")}</div>`;
 }
 
 function createDetailTextSection(label, value) {
