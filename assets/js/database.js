@@ -81,7 +81,7 @@ async function loadDatabase() {
     const text = await response.text();
     const utf8decoder = new TextDecoder("utf-8");
     const decodedText = utf8decoder.decode(new TextEncoder().encode(text));
-    const rows = decodedText.trim().split(/\r?\n/).filter((row) => row.trim().length > 0);
+    const rows = splitCSVRows(decodedText);
 
     if (rows.length === 0) {
       return { records: [], filters: [] };
@@ -134,6 +134,52 @@ function showErrorMessage() {
     container.innerHTML = '<div class="error-message">Couldn’t load data. Please try again later.</div>';
   }
   updateArticlesCount(0);
+}
+
+function splitCSVRows(text) {
+  if (typeof text !== "string" || text.length === 0) {
+    return [];
+  }
+
+  const rows = [];
+  let current = "";
+  let insideQuotes = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+
+    if (char === '"') {
+      if (insideQuotes && text[i + 1] === '"') {
+        current += '""';
+        i++;
+        continue;
+      }
+
+      insideQuotes = !insideQuotes;
+      current += char;
+      continue;
+    }
+
+    if (!insideQuotes && (char === "\n" || char === "\r")) {
+      if (char === "\r" && text[i + 1] === "\n") {
+        i++;
+      }
+
+      if (current.trim().length > 0) {
+        rows.push(current);
+      }
+      current = "";
+      continue;
+    }
+
+    current += char;
+  }
+
+  if (current.trim().length > 0) {
+    rows.push(current);
+  }
+
+  return rows;
 }
 
 function parseCSVRow(row) {
@@ -332,24 +378,6 @@ function renderFilterPanels(filterKeys, labels) {
     heading.className = "filter-card-title";
     heading.setAttribute("data-config-filter", key);
     heading.textContent = displayLabel;
-
-    const toggleLabel = document.createElement("label");
-    toggleLabel.className = "filter-toggle";
-
-    const toggle = document.createElement("input");
-    toggle.type = "checkbox";
-    toggle.checked = Boolean(filterVisibility[key]);
-    toggle.dataset.filterToggle = key;
-    toggle.setAttribute("aria-label", `Toggle ${heading.textContent} filter`);
-
-    const slider = document.createElement("span");
-    slider.className = "filter-toggle-slider";
-
-    toggleLabel.appendChild(toggle);
-    toggleLabel.appendChild(slider);
-
-    header.appendChild(heading);
-    header.appendChild(toggleLabel);
 
     const options = document.createElement("div");
     options.className = "filter-options";
