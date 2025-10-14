@@ -159,29 +159,11 @@ HERO SECTION
   width: 100%;
 }
 
-.venue-filter-section {
-  margin-top: 15px;
-  padding: 10px 15px 15px;
-  background-color: rgba(211, 208, 203, 0.6);
-  border-radius: 8px;
-}
-
-.venue-filter-section[hidden] {
-  display: none;
-}
-
-.venue-filter-section h3 {
-  font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 10px;
-  text-align: center;
-}
-
 .venue-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .venue-tag {
@@ -215,6 +197,14 @@ HERO SECTION
 
 .venue-tag--inactive {
   opacity: 0.6;
+}
+
+.venue-filter-card .filter-options {
+  padding-top: 4px;
+}
+
+.venue-filter-card .venue-tags {
+  justify-content: flex-start;
 }
 
 /* Each filter group */
@@ -634,6 +624,14 @@ padding-bottom: 10px;
   color: var(--grey);
   margin: 0;
   padding: 0;
+  line-height: 1.4;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.card-meta-venue {
+  font-style: italic;
 }
 
 /* Centered & Styled Title */
@@ -642,7 +640,7 @@ padding-bottom: 10px;
   font-weight: 500;
   text-align: center;
   margin: 10px 0px;
-  line-height: 14px;
+  line-height: 1.35;
   color: var(--offblack);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
@@ -661,6 +659,10 @@ padding-bottom: 10px;
 /*-------------------------------------------------------------------
   # DATABASE CARD TAG STYLES (SMALLER & CLEANER)
 -------------------------------------------------------------------*/
+
+.card-tags {
+  padding: 6px 8px;
+}
 
 .card-tags div {
   font-size: 12px;  /* Smaller font size for tag headings */
@@ -692,6 +694,7 @@ padding-bottom: 10px;
 .tag-container {
   display: flex;
   flex-wrap: wrap;
+  gap: 4px;
 }
 
 /* Individual Tags */
