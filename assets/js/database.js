@@ -26,6 +26,7 @@ const INFO_KEYS = ["info1", "info2", "info3"];
 let appConfig = cloneObject(defaultConfig);
 let database = [];
 let activeFilters = {};
+let filterVisibility = {};
 let filterLabels = {};
 let infoLabels = {};
 let expandedCardKey = null;
@@ -47,6 +48,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   applyConfig(appConfig, filterLabels);
 
   activeFilters = createEmptyFilterState();
+  filterVisibility = createDefaultFilterVisibility();
   database = ensureRecordsIncludeFilters(records, FILTER_KEYS);
 
   generateFilters(database, filterLabels);
@@ -61,6 +63,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 function createEmptyFilterState() {
   return FILTER_KEYS.reduce((acc, key) => {
     acc[key] = [];
+    return acc;
+  }, {});
+}
+
+function createDefaultFilterVisibility() {
+  return FILTER_KEYS.reduce((acc, key) => {
+    acc[key] = true;
     return acc;
   }, {});
 }
@@ -258,24 +267,85 @@ function renderFilterPanels(filterKeys, labels) {
   const filtersContainer = document.querySelector(".filters");
   if (!filtersContainer) return;
 
-  filtersContainer.innerHTML = "";
+  let toggleList = filtersContainer.querySelector(".filter-toggle-list");
+  if (!toggleList) {
+    toggleList = document.createElement("div");
+    toggleList.className = "filter-toggle-list";
+    filtersContainer.appendChild(toggleList);
+  }
+  if (!toggleList.hasAttribute("role")) {
+    toggleList.setAttribute("role", "group");
+    toggleList.setAttribute("aria-label", "Filter categories");
+  }
+
+  let cardGrid = filtersContainer.querySelector(".filter-card-grid");
+  if (!cardGrid) {
+    cardGrid = document.createElement("div");
+    cardGrid.className = "filter-card-grid";
+    filtersContainer.appendChild(cardGrid);
+  }
+
+  toggleList.innerHTML = "";
+  cardGrid.innerHTML = "";
 
   filterKeys.forEach((key, index) => {
-    const group = document.createElement("div");
-    group.className = "filter-group";
+    if (typeof filterVisibility[key] === "undefined") {
+      filterVisibility[key] = true;
+    }
+
+    const displayLabel = labels[key] || getDefaultFilterLabel(key, index);
+
+    const toggleRow = document.createElement("div");
+    toggleRow.className = "filter-toggle-row";
+    toggleRow.dataset.filterToggleRow = key;
+
+    const nameSpan = document.createElement("span");
+    nameSpan.className = "filter-toggle-name";
+    nameSpan.setAttribute("data-config-filter", key);
+    nameSpan.textContent = displayLabel;
+
+    const toggleLabel = document.createElement("label");
+    toggleLabel.className = "filter-toggle";
+
+    const toggle = document.createElement("input");
+    toggle.type = "checkbox";
+    toggle.checked = Boolean(filterVisibility[key]);
+    toggle.dataset.filterToggle = key;
+    toggle.setAttribute("aria-label", `Toggle ${displayLabel} filter`);
+
+    const slider = document.createElement("span");
+    slider.className = "filter-toggle-slider";
+
+    toggleLabel.appendChild(toggle);
+    toggleLabel.appendChild(slider);
+
+    toggleRow.appendChild(nameSpan);
+    toggleRow.appendChild(toggleLabel);
+    toggleList.appendChild(toggleRow);
+
+    const card = document.createElement("div");
+    card.className = "filter-group filter-card";
+    card.dataset.filterGroup = key;
 
     const heading = document.createElement("h3");
+    heading.className = "filter-card-title";
     heading.setAttribute("data-config-filter", key);
-    heading.textContent = labels[key] || getDefaultFilterLabel(key, index);
+    heading.textContent = displayLabel;
 
     const options = document.createElement("div");
     options.className = "filter-options";
     options.id = `${key}-filters`;
 
-    group.appendChild(heading);
-    group.appendChild(options);
+    card.appendChild(heading);
+    card.appendChild(options);
+    cardGrid.appendChild(card);
 
-    filtersContainer.appendChild(group);
+    setFilterGroupState(key, toggle.checked);
+
+    toggle.addEventListener("change", (event) => {
+      const isEnabled = event.target.checked;
+      handleFilterGroupToggle(key, isEnabled);
+    });
   });
 }
 
@@ -311,6 +381,7 @@ function generateFilters(data, labels) {
       checkbox.value = value;
       checkbox.id = `${key}-${value.replace(/\s+/g, "-").toLowerCase()}`;
       checkbox.setAttribute("aria-label", `${headingLabel || "Filter"}: ${value}`);
+      checkbox.disabled = !filterVisibility[key];
       checkbox.addEventListener("change", () => {
         handleFilterChange(key, value);
       });
@@ -513,6 +584,9 @@ function getFilteredData(data) {
 
     return FILTER_KEYS.every((key) => {
       const active = activeFilters[key];
+      if (!filterVisibility[key]) {
+        return true;
+      }
       if (!active || active.length === 0) return true;
       const values = getItemValues(item[key]);
       return active.some((selected) => values.includes(selected));
@@ -532,6 +606,7 @@ function updateFilterCounts() {
   const filteredData = getFilteredData(database);
 
   FILTER_KEYS.forEach((key) => {
+    const groupVisible = filterVisibility[key];
     const counts = {};
     filteredData.forEach((item) => {
       getItemValues(item[key]).forEach((value) => {
@@ -550,13 +625,69 @@ function updateFilterCounts() {
         const count = counts[filterValue] || 0;
         countSpan.textContent = `[${count}]`;
 
-        if (count === 0) {
+        if (count === 0 || !groupVisible) {
           label.classList.add("disabled-filter");
         } else {
           label.classList.remove("disabled-filter");
         }
+
+        checkbox.disabled = !groupVisible;
       });
   });
+}
+
+function handleFilterGroupToggle(key, isEnabled) {
+  setFilterGroupState(key, isEnabled);
+
+  expandedCardKey = null;
+  renderCards(database, filterLabels, infoLabels);
+  updateFilterCounts();
+}
+
+function setFilterGroupState(key, isEnabled) {
+  filterVisibility[key] = isEnabled;
+  const group = document.querySelector(`.filter-group[data-filter-group='${key}']`);
+  const toggleRow = document.querySelector(`.filter-toggle-row[data-filter-toggle-row='${key}']`);
+  const toggleInput = document.querySelector(`.filter-toggle input[data-filter-toggle='${key}']`);
+
+  if (toggleInput && toggleInput.checked !== isEnabled) {
+    toggleInput.checked = isEnabled;
+  }
+
+  if (toggleRow) {
+    toggleRow.classList.toggle("filter-toggle-row--disabled", !isEnabled);
+    if (isEnabled) {
+      toggleRow.removeAttribute("aria-disabled");
+    } else {
+      toggleRow.setAttribute("aria-disabled", "true");
+    }
+  }
+
+  if (!group) return;
+
+  group.classList.toggle("filter-group--collapsed", !isEnabled);
+  if (isEnabled) {
+    group.removeAttribute("hidden");
+  } else {
+    group.setAttribute("hidden", "true");
+  }
+
+  const optionsContainer = group.querySelector(".filter-options");
+  if (optionsContainer) {
+    optionsContainer.hidden = !isEnabled;
+    optionsContainer.setAttribute("aria-hidden", String(!isEnabled));
+  }
+
+  group.querySelectorAll(".filter-options input[type='checkbox']").forEach((checkbox) => {
+    checkbox.disabled = !isEnabled;
+    if (!isEnabled) {
+      checkbox.checked = false;
+    }
+  });
+
+  if (!isEnabled) {
+    activeFilters[key] = [];
+  }
 }
 
 function initializeVenueFilters(data) {
@@ -646,6 +777,16 @@ function setupResetButton() {
       });
 
     activeFilters = createEmptyFilterState();
+    filterVisibility = createDefaultFilterVisibility();
+
+    document
+      .querySelectorAll(".filter-toggle input[type='checkbox']")
+      .forEach((toggle) => {
+        const key = toggle.dataset.filterToggle;
+        toggle.checked = true;
+        setFilterGroupState(key, true);
+      });
+
     resetVenueFilters();
     expandedCardKey = null;
     renderCards(database, filterLabels, infoLabels);
@@ -734,10 +875,9 @@ function applyConfig(config, filterLabelsMap) {
   }
 
   FILTER_KEYS.forEach((key) => {
-    const heading = document.querySelector(`[data-config-filter="${key}"]`);
-    if (heading) {
+    document.querySelectorAll(`[data-config-filter="${key}"]`).forEach((heading) => {
       heading.textContent = filterLabelsMap[key] || heading.textContent;
-    }
+    });
   });
 
   const faviconLink = document.querySelector("link[rel='icon']");
