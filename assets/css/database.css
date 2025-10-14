@@ -154,12 +154,20 @@ HERO SECTION
 
 .filter-card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 20px;
   width: 100%;
 }
 
 /* Dedicated styles for venue tags removed in favor of shared checkbox styling */
+
+.venue-filter-card .filter-options {
+  padding-top: 4px;
+}
+
+.venue-filter-card .venue-tags {
+  justify-content: flex-start;
+}
 
 /* Each filter group */
 .filter-group {
