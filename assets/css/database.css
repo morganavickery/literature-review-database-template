@@ -110,17 +110,53 @@ HERO SECTION
 
 /* Filters Section */
 .filters {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: minmax(200px, 240px) 1fr;
   align-items: flex-start;
   padding: 15px;
   background-color: rgba(211, 208, 203, 1); /* Timberwolf background with transparency */
   border-radius: 8px;
   width: 100%;
-  gap: 20px;  /* Horizontal gap by default */
+  column-gap: 24px;
+  row-gap: 20px;
   transition: all 0.3s ease; /* Smooth transition */
   z-index: -1;
+}
+
+.filter-toggle-list {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.filter-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 8px 12px;
+  background-color: rgba(255, 255, 255, 0.75);
+  border-radius: 8px;
+  border: 1px solid rgba(7, 16, 19, 0.08);
+}
+
+.filter-toggle-row--disabled {
+  opacity: 0.6;
+}
+
+.filter-toggle-name {
+  flex: 1 1 auto;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--offblack);
+}
+
+.filter-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  width: 100%;
 }
 
 .venue-filter-section {
@@ -183,9 +219,21 @@ HERO SECTION
 
 /* Each filter group */
 .filter-group {
-  flex: 1;
-  min-width: 200px; /* Prevents too small of a filter group */
-  margin-bottom: 10px;  /* Space between filter groups when stacked vertically */
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  background-color: rgba(255, 255, 255, 0.85);
+  border-radius: 10px;
+  border: 1px solid rgba(7, 16, 19, 0.12);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+.filter-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--offblack);
 }
 
 .filter-group.filter-group--empty {
@@ -196,18 +244,71 @@ HERO SECTION
 .filter-group h3 {
   font-size: 16px;
   font-weight: 600;
-  margin-bottom: 8px;
-  text-align: center;
+  margin: 0;
+  text-align: left;
+}
+
+.filter-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 44px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.filter-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.filter-toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(7, 16, 19, 0.18);
+  border: 1px solid rgba(7, 16, 19, 0.28);
+  border-radius: 9999px;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.filter-toggle-slider::before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 2px;
+  bottom: 2px;
+  background-color: var(--contrast-color);
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease;
+}
+
+.filter-toggle input:checked + .filter-toggle-slider {
+  background-color: var(--tangerine);
+  border-color: var(--tangerine);
+}
+
+.filter-toggle input:focus-visible + .filter-toggle-slider {
+  box-shadow: 0 0 0 3px rgba(239, 138, 23, 0.35);
+}
+
+.filter-toggle input:checked + .filter-toggle-slider::before {
+  transform: translateX(22px);
+}
+
+.filter-group--collapsed {
+  display: none;
 }
 
 /* Collapsed filters are hidden */
 .filters.collapsed {
-  height: 0;  /* Instead of max-height */
-  opacity: 0;
-  visibility: hidden;
-  padding: 0;
-  margin: 0;
-  gap: 0; /* Remove space when collapsed */
+  display: none;
 }
 
 
@@ -223,6 +324,16 @@ HERO SECTION
   border: 1px solid var(--grey);
   border-radius: 5px;
   background: rgb(256,256,256,.8);
+}
+
+@media (max-width: 900px) {
+  .filters {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-toggle-list {
+    order: -1;
+  }
 }
 
 /* Adjusting checkbox and other option styles (keep unchanged) */
