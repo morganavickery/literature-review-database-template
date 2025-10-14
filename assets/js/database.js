@@ -39,6 +39,10 @@ const debouncedUpdateFilterCounts = debounce(updateFilterCounts, 100);
 
 const TAG_PREFIX_REGEX = /^(?:\[[^\]]+\]\s*)+/i;
 
+const FILTER_OPTION_MIN_FONT_SIZE = 8;
+const filterTextContainers = new Set();
+let filterTextFitScheduled = false;
+
 function getDisplayTagValue(value) {
   if (typeof value !== "string") return "";
   const cleaned = value.replace(TAG_PREFIX_REGEX, "").trim();
@@ -70,6 +74,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupResetButton();
   setupFilterToggle();
 });
+
+window.addEventListener("resize", scheduleRefitAllFilterTexts);
 
 function createEmptyFilterState() {
   return FILTER_KEYS.reduce((acc, key) => {
@@ -455,14 +461,10 @@ function renderVenueFilterPanel(toggleList, cardGrid) {
 
   const options = document.createElement("div");
   options.className = "filter-options";
+  options.id = "venue-filter-options";
+  options.setAttribute("role", "group");
+  options.setAttribute("aria-label", "Filter by venue");
 
-  const tagContainer = document.createElement("div");
-  tagContainer.id = "venue-tags";
-  tagContainer.className = "venue-tags";
-  tagContainer.setAttribute("role", "group");
-  tagContainer.setAttribute("aria-label", "Filter by venue");
-
-  options.appendChild(tagContainer);
   card.appendChild(heading);
   card.appendChild(options);
   cardGrid.appendChild(card);
@@ -524,7 +526,8 @@ function generateFilters(data, labels) {
       label.appendChild(checkbox);
 
       const textSpan = document.createElement("span");
-      textSpan.textContent = ` ${displayValue || value} `;
+      textSpan.className = "filter-option-text";
+      textSpan.textContent = displayValue || value;
       label.appendChild(textSpan);
 
       const countSpan = document.createElement("span");
@@ -534,6 +537,64 @@ function generateFilters(data, labels) {
 
       container.appendChild(label);
     });
+
+    scheduleFilterOptionFit(container);
+  });
+}
+
+function scheduleFilterOptionFit(container) {
+  if (!container) return;
+  filterTextContainers.add(container);
+  requestAnimationFrame(() => {
+    fitFilterOptionText(container);
+  });
+}
+
+function scheduleRefitAllFilterTexts() {
+  if (filterTextFitScheduled) return;
+  filterTextFitScheduled = true;
+  requestAnimationFrame(() => {
+    filterTextContainers.forEach((container) => {
+      fitFilterOptionText(container);
+    });
+    filterTextFitScheduled = false;
+  });
+}
+
+function fitFilterOptionText(container) {
+  if (!container) return;
+
+  const textNodes = container.querySelectorAll(".filter-option-text");
+  textNodes.forEach((span) => {
+    if (!span.dataset.baseFontSize) {
+      const computedSize = parseFloat(window.getComputedStyle(span).fontSize);
+      span.dataset.baseFontSize = Number.isFinite(computedSize) ? String(computedSize) : "14";
+    }
+    const baseFontSize = parseFloat(span.dataset.baseFontSize) || 14;
+    span.style.fontSize = `${baseFontSize}px`;
+  });
+
+  textNodes.forEach((span) => {
+    const label = span.closest("label");
+    if (!label || label.offsetParent === null) return;
+
+    const baseFontSize = parseFloat(span.dataset.baseFontSize) || 14;
+    const minFontSize = Math.max(FILTER_OPTION_MIN_FONT_SIZE, baseFontSize - 6);
+    let currentSize = baseFontSize;
+    span.style.fontSize = `${currentSize}px`;
+
+    let iteration = 0;
+    while (span.scrollWidth > span.clientWidth && currentSize > minFontSize && iteration < 12) {
+      currentSize -= 0.5;
+      span.style.fontSize = `${currentSize}px`;
+      iteration++;
+    }
+
+    if (span.scrollWidth > span.clientWidth) {
+      span.title = span.textContent.trim();
+    } else {
+      span.removeAttribute("title");
+    }
   });
 }
 
@@ -803,6 +864,43 @@ function updateFilterCounts() {
         checkbox.disabled = !groupVisible;
       });
   });
+
+  const venueGroupVisible = filterVisibility[VENUE_FILTER_KEY] !== false;
+  const venueCounts = {};
+  filteredData.forEach((item) => {
+    const normalizedVenue = normalizeVenue(item.venue);
+    if (normalizedVenue) {
+      venueCounts[normalizedVenue] = (venueCounts[normalizedVenue] || 0) + 1;
+    }
+  });
+
+  const venueContainer = document.getElementById("venue-filter-options");
+  if (venueContainer) {
+    venueContainer.querySelectorAll("label").forEach((label) => {
+      const checkbox = label.querySelector("input[type='checkbox']");
+      const countSpan = label.querySelector(".filter-count");
+      if (!checkbox || !countSpan) return;
+
+      const normalizedVenue = checkbox.value.trim();
+      const count = venueCounts[normalizedVenue] || 0;
+      countSpan.textContent = `[${count}]`;
+
+      if (count === 0 || !venueGroupVisible) {
+        label.classList.add("disabled-filter");
+      } else {
+        label.classList.remove("disabled-filter");
+      }
+
+      checkbox.disabled = !venueGroupVisible;
+      if (!venueGroupVisible) {
+        checkbox.setAttribute("aria-disabled", "true");
+      } else {
+        checkbox.removeAttribute("aria-disabled");
+      }
+    });
+  }
+
+  scheduleRefitAllFilterTexts();
 }
 
 function handleFilterGroupToggle(key, isEnabled) {
@@ -861,6 +959,7 @@ function setFilterGroupState(key, isEnabled) {
     if (!isEnabled && Object.prototype.hasOwnProperty.call(activeFilters, key)) {
       activeFilters[key] = [];
     }
+    scheduleRefitAllFilterTexts();
     return;
   }
 
@@ -868,15 +967,17 @@ function setFilterGroupState(key, isEnabled) {
   if (!isEnabled) {
     resetVenueFilters();
   }
+  scheduleRefitAllFilterTexts();
 }
 
 function initializeVenueFilters(data) {
-  const venueContainer = document.getElementById("venue-tags");
+  const venueContainer = document.getElementById("venue-filter-options");
   const venueCard = document.querySelector(`.filter-group[data-filter-group='${VENUE_FILTER_KEY}']`);
   const toggleRow = document.querySelector(`.filter-toggle-row[data-filter-toggle-row='${VENUE_FILTER_KEY}']`);
   if (!venueContainer || !Array.isArray(data)) return;
 
   const venueMap = new Map();
+  const venueCounts = new Map();
   data.forEach((item) => {
     const label = (item?.venue || "").trim();
     if (label.length === 0) return;
@@ -884,6 +985,7 @@ function initializeVenueFilters(data) {
     if (!venueMap.has(normalized)) {
       venueMap.set(normalized, label);
     }
+    venueCounts.set(normalized, (venueCounts.get(normalized) || 0) + 1);
   });
 
   venueOptions = Array.from(venueMap.entries())
@@ -906,58 +1008,77 @@ function initializeVenueFilters(data) {
   activeVenues = new Set(venueOptions.map((option) => option.normalized));
 
   venueOptions.forEach((option) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "venue-tag venue-tag--active";
-    button.dataset.venue = option.normalized;
-    button.textContent = option.label;
-    button.addEventListener("click", () => {
-      toggleVenueSelection(option.normalized, button);
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.value = option.normalized;
+    const checkboxId = `venue-${option.normalized.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`;
+    checkbox.id = checkboxId;
+    checkbox.checked = true;
+    checkbox.dataset.venue = option.normalized;
+    checkbox.setAttribute("aria-label", `${VENUE_FILTER_LABEL}: ${option.label}`);
+    checkbox.addEventListener("change", (event) => {
+      handleVenueCheckboxChange(option.normalized, event.target.checked);
     });
-    venueContainer.appendChild(button);
+
+    const label = document.createElement("label");
+    label.className = "venue-filter-option";
+    label.htmlFor = checkboxId;
+    label.appendChild(checkbox);
+
+    const textSpan = document.createElement("span");
+    textSpan.className = "filter-option-text";
+    textSpan.textContent = option.label;
+    label.appendChild(textSpan);
+
+    const countSpan = document.createElement("span");
+    countSpan.className = "filter-count";
+    countSpan.textContent = `[${venueCounts.get(option.normalized) || 0}]`;
+    label.appendChild(countSpan);
+
+    venueContainer.appendChild(label);
   });
 
   const isEnabled = filterVisibility[VENUE_FILTER_KEY] !== false;
   setFilterGroupState(VENUE_FILTER_KEY, isEnabled);
-}
-
-function toggleVenueSelection(normalizedName, element) {
-  if (!normalizedName || filterVisibility[VENUE_FILTER_KEY] === false) return;
-
-  const isActive = activeVenues.has(normalizedName);
-  if (isActive) {
-    activeVenues.delete(normalizedName);
-  } else {
-    activeVenues.add(normalizedName);
-  }
-
-  setVenueTagState(element, !isActive);
-  renderCards(database, filterLabels, infoLabels);
-  debouncedUpdateFilterCounts();
+  scheduleFilterOptionFit(venueContainer);
 }
 
 function resetVenueFilters() {
   activeVenues = new Set(venueOptions.map((option) => option.normalized));
-  document.querySelectorAll(".venue-tag").forEach((tag) => {
-    setVenueTagState(tag, true);
-  });
+  document
+    .querySelectorAll("#venue-filter-options input[type='checkbox']")
+    .forEach((checkbox) => {
+      checkbox.checked = true;
+    });
 }
 
 function setVenueFilterEnabledState(isEnabled) {
-  document.querySelectorAll(".venue-tag").forEach((tag) => {
-    tag.disabled = !isEnabled;
-    if (isEnabled) {
-      tag.removeAttribute("aria-disabled");
-    } else {
-      tag.setAttribute("aria-disabled", "true");
-    }
-  });
+  document
+    .querySelectorAll("#venue-filter-options input[type='checkbox']")
+    .forEach((checkbox) => {
+      checkbox.disabled = !isEnabled;
+      if (isEnabled) {
+        checkbox.removeAttribute("aria-disabled");
+      } else {
+        checkbox.setAttribute("aria-disabled", "true");
+      }
+    });
 }
 
-function setVenueTagState(element, isActive) {
-  if (!element) return;
-  element.classList.toggle("venue-tag--active", isActive);
-  element.classList.toggle("venue-tag--inactive", !isActive);
+function handleVenueCheckboxChange(normalizedName, isChecked) {
+  if (!normalizedName || filterVisibility[VENUE_FILTER_KEY] === false) {
+    return;
+  }
+
+  if (isChecked) {
+    activeVenues.add(normalizedName);
+  } else {
+    activeVenues.delete(normalizedName);
+  }
+
+  expandedCardKey = null;
+  renderCards(database, filterLabels, infoLabels);
+  debouncedUpdateFilterCounts();
 }
 
 function normalizeVenue(value) {
