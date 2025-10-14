@@ -32,6 +32,8 @@ let infoLabels = {};
 let expandedCardKey = null;
 let venueOptions = [];
 let activeVenues = new Set();
+const VENUE_FILTER_KEY = "venueFilter";
+const VENUE_FILTER_LABEL = "Venues";
 
 const debouncedUpdateFilterCounts = debounce(updateFilterCounts, 100);
 
@@ -52,11 +54,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   filterLabels = buildFilterLabels(appConfig, FILTER_KEYS);
   infoLabels = buildInfoLabels(appConfig);
 
-  renderFilterPanels(FILTER_KEYS, filterLabels);
-  applyConfig(appConfig, filterLabels);
-
   activeFilters = createEmptyFilterState();
   filterVisibility = createDefaultFilterVisibility();
+  filterVisibility[VENUE_FILTER_KEY] = true;
+
+  renderFilterPanels(FILTER_KEYS, filterLabels);
+  applyConfig(appConfig, filterLabels);
   database = ensureRecordsIncludeFilters(records, FILTER_KEYS);
 
   generateFilters(database, filterLabels);
@@ -402,6 +405,74 @@ function renderFilterPanels(filterKeys, labels) {
       handleFilterGroupToggle(key, isEnabled);
     });
   });
+
+  renderVenueFilterPanel(toggleList, cardGrid);
+}
+
+function renderVenueFilterPanel(toggleList, cardGrid) {
+  if (!toggleList || !cardGrid) return;
+
+  if (typeof filterVisibility[VENUE_FILTER_KEY] === "undefined") {
+    filterVisibility[VENUE_FILTER_KEY] = true;
+  }
+
+  const isEnabled = Boolean(filterVisibility[VENUE_FILTER_KEY]);
+
+  const toggleRow = document.createElement("div");
+  toggleRow.className = "filter-toggle-row";
+  toggleRow.dataset.filterToggleRow = VENUE_FILTER_KEY;
+
+  const nameSpan = document.createElement("span");
+  nameSpan.className = "filter-toggle-name";
+  nameSpan.textContent = VENUE_FILTER_LABEL;
+
+  const toggleLabel = document.createElement("label");
+  toggleLabel.className = "filter-toggle";
+
+  const toggle = document.createElement("input");
+  toggle.type = "checkbox";
+  toggle.checked = isEnabled;
+  toggle.dataset.filterToggle = VENUE_FILTER_KEY;
+  toggle.setAttribute("aria-label", `Toggle ${VENUE_FILTER_LABEL} filter`);
+
+  const slider = document.createElement("span");
+  slider.className = "filter-toggle-slider";
+
+  toggleLabel.appendChild(toggle);
+  toggleLabel.appendChild(slider);
+
+  toggleRow.appendChild(nameSpan);
+  toggleRow.appendChild(toggleLabel);
+  toggleList.appendChild(toggleRow);
+
+  const card = document.createElement("div");
+  card.className = "filter-group filter-card venue-filter-card";
+  card.dataset.filterGroup = VENUE_FILTER_KEY;
+
+  const heading = document.createElement("h3");
+  heading.className = "filter-card-title";
+  heading.textContent = VENUE_FILTER_LABEL;
+
+  const options = document.createElement("div");
+  options.className = "filter-options";
+
+  const tagContainer = document.createElement("div");
+  tagContainer.id = "venue-tags";
+  tagContainer.className = "venue-tags";
+  tagContainer.setAttribute("role", "group");
+  tagContainer.setAttribute("aria-label", "Filter by venue");
+
+  options.appendChild(tagContainer);
+  card.appendChild(heading);
+  card.appendChild(options);
+  cardGrid.appendChild(card);
+
+  setFilterGroupState(VENUE_FILTER_KEY, isEnabled);
+
+  toggle.addEventListener("change", (event) => {
+    const enabled = event.target.checked;
+    handleFilterGroupToggle(VENUE_FILTER_KEY, enabled);
+  });
 }
 
 function generateFilters(data, labels) {
@@ -668,7 +739,8 @@ function createDetailTextSection(label, value) {
 
 function getFilteredData(data) {
   return data.filter((item) => {
-    if (venueOptions.length > 0) {
+    const isVenueFilterEnabled = filterVisibility[VENUE_FILTER_KEY] !== false;
+    if (isVenueFilterEnabled && venueOptions.length > 0) {
       if (activeVenues.size === 0) {
         return false;
       }
@@ -742,6 +814,7 @@ function handleFilterGroupToggle(key, isEnabled) {
 }
 
 function setFilterGroupState(key, isEnabled) {
+  const isVenueFilter = key === VENUE_FILTER_KEY;
   filterVisibility[key] = isEnabled;
   const group = document.querySelector(`.filter-group[data-filter-group='${key}']`);
   const toggleRow = document.querySelector(`.filter-toggle-row[data-filter-toggle-row='${key}']`);
@@ -775,21 +848,32 @@ function setFilterGroupState(key, isEnabled) {
     optionsContainer.setAttribute("aria-hidden", String(!isEnabled));
   }
 
-  group.querySelectorAll(".filter-options input[type='checkbox']").forEach((checkbox) => {
-    checkbox.disabled = !isEnabled;
-    if (!isEnabled) {
-      checkbox.checked = false;
-    }
-  });
+  if (!isVenueFilter) {
+    group
+      .querySelectorAll(".filter-options input[type='checkbox']")
+      .forEach((checkbox) => {
+        checkbox.disabled = !isEnabled;
+        if (!isEnabled) {
+          checkbox.checked = false;
+        }
+      });
 
+    if (!isEnabled && Object.prototype.hasOwnProperty.call(activeFilters, key)) {
+      activeFilters[key] = [];
+    }
+    return;
+  }
+
+  setVenueFilterEnabledState(isEnabled);
   if (!isEnabled) {
-    activeFilters[key] = [];
+    resetVenueFilters();
   }
 }
 
 function initializeVenueFilters(data) {
   const venueContainer = document.getElementById("venue-tags");
-  const venueSection = document.querySelector(".venue-filter-section");
+  const venueCard = document.querySelector(`.filter-group[data-filter-group='${VENUE_FILTER_KEY}']`);
+  const toggleRow = document.querySelector(`.filter-toggle-row[data-filter-toggle-row='${VENUE_FILTER_KEY}']`);
   if (!venueContainer || !Array.isArray(data)) return;
 
   const venueMap = new Map();
@@ -808,12 +892,16 @@ function initializeVenueFilters(data) {
 
   if (venueOptions.length === 0) {
     venueContainer.innerHTML = "";
-    venueSection?.setAttribute("hidden", "true");
     activeVenues = new Set();
+    venueCard?.classList.add("filter-group--empty");
+    venueCard?.setAttribute("hidden", "true");
+    toggleRow?.setAttribute("hidden", "true");
     return;
   }
 
-  venueSection?.removeAttribute("hidden");
+  toggleRow?.removeAttribute("hidden");
+  venueCard?.classList.remove("filter-group--empty");
+  venueCard?.removeAttribute("hidden");
   venueContainer.innerHTML = "";
   activeVenues = new Set(venueOptions.map((option) => option.normalized));
 
@@ -828,10 +916,13 @@ function initializeVenueFilters(data) {
     });
     venueContainer.appendChild(button);
   });
+
+  const isEnabled = filterVisibility[VENUE_FILTER_KEY] !== false;
+  setFilterGroupState(VENUE_FILTER_KEY, isEnabled);
 }
 
 function toggleVenueSelection(normalizedName, element) {
-  if (!normalizedName) return;
+  if (!normalizedName || filterVisibility[VENUE_FILTER_KEY] === false) return;
 
   const isActive = activeVenues.has(normalizedName);
   if (isActive) {
@@ -849,6 +940,17 @@ function resetVenueFilters() {
   activeVenues = new Set(venueOptions.map((option) => option.normalized));
   document.querySelectorAll(".venue-tag").forEach((tag) => {
     setVenueTagState(tag, true);
+  });
+}
+
+function setVenueFilterEnabledState(isEnabled) {
+  document.querySelectorAll(".venue-tag").forEach((tag) => {
+    tag.disabled = !isEnabled;
+    if (isEnabled) {
+      tag.removeAttribute("aria-disabled");
+    } else {
+      tag.setAttribute("aria-disabled", "true");
+    }
   });
 }
 
