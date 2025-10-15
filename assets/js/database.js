@@ -18,11 +18,40 @@ const defaultConfig = {
   },
   branding: {
     favicon: "assets/uploads/signpost-2.svg"
+  },
+  colors: {
+    background: "#ffffff",
+    surface: "#FBF8C5",
+    surfaceStrong: "#D3D0CB",
+    text: "#071013",
+    heading: "#071013",
+    muted: "#33392D",
+    accent: "#EF8A17",
+    accentStrong: "#8F250C",
+    contrast: "#ffffff",
+    heroText: "#ffffff",
+    cardBackground: "#ffffff",
+    tagBackground: "rgba(211, 208, 203, 0.5)"
   }
 };
 
 let FILTER_KEYS = Object.keys(defaultConfig.filters || {});
 const INFO_KEYS = ["info1", "info2", "info3"];
+
+const COLOR_VARIABLE_MAP = {
+  background: "--color-background",
+  surface: "--color-surface",
+  surfaceStrong: "--color-surface-strong",
+  text: "--color-text",
+  heading: "--color-heading",
+  muted: "--color-muted",
+  accent: "--color-accent",
+  accentStrong: "--color-accent-strong",
+  contrast: "--color-contrast",
+  heroText: "--color-hero-text",
+  cardBackground: "--color-card-background",
+  tagBackground: "--color-tag-background"
+};
 
 let appConfig = cloneObject(defaultConfig);
 let database = [];
@@ -1164,7 +1193,31 @@ function buildInfoLabels(config) {
   return labels;
 }
 
+function applyColorTheme(colorOverrides) {
+  const root = document.documentElement;
+  if (!root) {
+    return;
+  }
+
+  const defaults = isObject(defaultConfig.colors) ? defaultConfig.colors : {};
+  const overrides = isObject(colorOverrides) ? colorOverrides : {};
+
+  Object.entries(COLOR_VARIABLE_MAP).forEach(([configKey, cssVar]) => {
+    const overrideValue = overrides[configKey];
+    const fallbackValue = defaults[configKey];
+    const resolvedValue = typeof overrideValue === "string" && overrideValue.trim().length > 0
+      ? overrideValue.trim()
+      : fallbackValue;
+
+    if (typeof resolvedValue === "string" && resolvedValue.trim().length > 0) {
+      root.style.setProperty(cssVar, resolvedValue.trim());
+    }
+  });
+}
+
 function applyConfig(config, filterLabelsMap) {
+  applyColorTheme(config?.colors);
+
   const siteTitle = config?.site?.pageTitle || defaultConfig.site.pageTitle;
   document.title = siteTitle;
 

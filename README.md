@@ -26,12 +26,25 @@ Edit `assets/config.json` in any text editor. Each field is plain English; updat
 | `infoFields.info2.label` | Heading used in the card details for the second info field. |
 | `infoFields.info3.label` | Heading used in the card details for the third info field. |
 | `branding.favicon` | Path to the favicon shown in the browser tab. |
+| `colors.background` | Base page background color. |
+| `colors.surface` | Primary surface color for filter panels and other elevated sections. |
+| `colors.surfaceStrong` | Secondary surface tone used for filter sidebars and dividers. |
+| `colors.text` | Default body text color. |
+| `colors.heading` | Color applied to headings. |
+| `colors.muted` | Muted text and border color for metadata and outlines. |
+| `colors.accent` | Accent color for buttons, active states, and focus rings. |
+| `colors.accentStrong` | Darker accent hue used for toggles and selected tags. |
+| `colors.contrast` | Text color displayed on top of the accent backgrounds. |
+| `colors.heroText` | Text color used within the hero section. |
+| `colors.cardBackground` | Background color for each article card. |
+| `colors.tagBackground` | Fill color for tag pills and info chips. |
 
 📝 **Tips**
 
 * When referencing local assets (images, icons, etc.), use paths relative to the project root (for example, `assets/img/my-logo.png`).
 * Omit optional fields by leaving them blank or removing them entirely.
 * Stick with valid JSON — double quotes around keys/values and commas between items.
+* Delete any color entry to fall back to the default palette baked into `assets/css/database.css`.
 
 ## 2. Update the Literature Database
 
