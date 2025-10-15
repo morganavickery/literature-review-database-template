@@ -94,6 +94,17 @@ HERO SECTION
   flex: 1 1 auto;
 }
 
+.database-hero .hero-title {
+  font-size: 2.5rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.database-hero .hero-subtitle {
+  font-size: 1.125rem;
+  margin: 0;
+}
+
 /*-------------------------------------------------------------------
   # FILTERS SECTION - COMPACT LAYOUT
 -------------------------------------------------------------------*/
@@ -760,9 +771,13 @@ MOBILE SCREEN RESPONSIVENESS
     height: min-content;
   }
 
-  .database-hero h2 {
+  .database-hero .hero-title {
     font-size: 1.5rem;  /* Smaller font size on narrow screens */
     line-height: 1.2;  /* Adjust line-height for smaller font size */
+  }
+
+  .database-hero .hero-subtitle {
+    font-size: 1rem;
   }
 
   .filter-options label {
@@ -788,9 +803,13 @@ MOBILE SCREEN RESPONSIVENESS
     width: auto;
   }
 
-  .database-hero h2 {
+  .database-hero .hero-title {
     font-size: 1.25rem;  /* Even smaller font size */
     line-height: 1.2;
+  }
+
+  .database-hero .hero-subtitle {
+    font-size: 0.95rem;
   }
   .filter-options input[type="checkbox"] {
     width: 12px;

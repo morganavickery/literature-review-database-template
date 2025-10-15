@@ -13,8 +13,9 @@ Edit `assets/config.json` in any text editor. Each field is plain English; updat
 
 | Path | What it controls |
 |----|----|
-| `site.pageTitle` | Browser tab title. |
-| `site.heroHeading` | Large title at the top of the database page. |
+| `site.pageTitle` | Browser tab title and primary hero heading. |
+| `site.pageSubtitle` | Subtitle text displayed below the hero title. |
+| `site.heroHeading` | Fallback hero title used when `site.pageTitle` is omitted. |
 | `site.submitButtonText` | Label inside the optional “add article” button. |
 | `site.submitButtonLink` | URL opened when that button is clicked (leave blank to hide the button). |
 | `filters.filter1.label` | Heading for the first filter column. |

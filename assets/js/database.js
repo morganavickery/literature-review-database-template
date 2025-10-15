@@ -1,6 +1,7 @@
 const defaultConfig = {
   site: {
     pageTitle: "Medical Specialty Camp Literature Database",
+    pageSubtitle: "Discover research and insights from medical specialty camps.",
     heroHeading: "Medical Specialty Camp Literature Database",
     submitButtonText: "Submit an Article",
     submitButtonLink: "https://forms.gle/42GckNJQ4EVMdHDr7"
@@ -1167,9 +1168,24 @@ function applyConfig(config, filterLabelsMap) {
   const siteTitle = config?.site?.pageTitle || defaultConfig.site.pageTitle;
   document.title = siteTitle;
 
-  const heroHeading = document.querySelector(".hero-text h2");
-  if (heroHeading) {
-    heroHeading.textContent = config?.site?.heroHeading || defaultConfig.site.heroHeading;
+  const heroTitleElement = document.querySelector(".hero-text .hero-title");
+  if (heroTitleElement) {
+    const heroTitle = typeof siteTitle === "string" && siteTitle.trim().length > 0
+      ? siteTitle.trim()
+      : config?.site?.heroHeading || defaultConfig.site.heroHeading;
+    heroTitleElement.textContent = heroTitle;
+  }
+
+  const heroSubtitleElement = document.querySelector(".hero-text .hero-subtitle");
+  if (heroSubtitleElement) {
+    const subtitleValue = typeof config?.site?.pageSubtitle === "string" ? config.site.pageSubtitle : "";
+    const trimmedSubtitle = subtitleValue.trim();
+    const defaultSubtitle = typeof defaultConfig.site.pageSubtitle === "string" ? defaultConfig.site.pageSubtitle : "";
+    const shouldUseDefault = trimmedSubtitle.length === 0 && subtitleValue === defaultSubtitle;
+    const subtitleToUse = shouldUseDefault ? defaultSubtitle : trimmedSubtitle;
+
+    heroSubtitleElement.textContent = subtitleToUse;
+    heroSubtitleElement.style.display = subtitleToUse ? "" : "none";
   }
 
   const addButton = document.querySelector(".add-article-btn");

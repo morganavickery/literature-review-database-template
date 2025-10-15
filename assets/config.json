@@ -1,6 +1,7 @@
 {
   "site": {
-    "pageTitle": "Page Title",
+    "pageTitle": "Interactive Literature Database",
+    "pageSubtitle": "Journal of the Learning Sciences",
     "heroHeading": "Database Title",
     "submitButtonText": "Submit an Article",
     "submitButtonLink": "https://forms.gle/42GckNJQ4EVMdHDr7"
