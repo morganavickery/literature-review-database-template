@@ -20,18 +20,8 @@ const defaultConfig = {
     favicon: "assets/uploads/signpost-2.svg"
   },
   colors: {
-    background: "#ffffff",
-    surface: "#FBF8C5",
-    surfaceStrong: "#D3D0CB",
-    text: "#071013",
-    heading: "#071013",
-    muted: "#33392D",
-    accent: "#EF8A17",
-    accentStrong: "#8F250C",
-    contrast: "#ffffff",
-    heroText: "#ffffff",
-    cardBackground: "#ffffff",
-    tagBackground: "rgba(211, 208, 203, 0.5)"
+    primaryAccent: "#8F250C",
+    secondaryAccent: "#EF8A17"
   }
 };
 
@@ -39,18 +29,8 @@ let FILTER_KEYS = Object.keys(defaultConfig.filters || {});
 const INFO_KEYS = ["info1", "info2", "info3"];
 
 const COLOR_VARIABLE_MAP = {
-  background: "--color-background",
-  surface: "--color-surface",
-  surfaceStrong: "--color-surface-strong",
-  text: "--color-text",
-  heading: "--color-heading",
-  muted: "--color-muted",
-  accent: "--color-accent",
-  accentStrong: "--color-accent-strong",
-  contrast: "--color-contrast",
-  heroText: "--color-hero-text",
-  cardBackground: "--color-card-background",
-  tagBackground: "--color-tag-background"
+  primaryAccent: "--color-primary-accent",
+  secondaryAccent: "--color-secondary-accent"
 };
 
 let appConfig = cloneObject(defaultConfig);

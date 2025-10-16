@@ -39,17 +39,7 @@
     "favicon": "assets/uploads/signpost-2.svg"
   },
   "colors": {
-    "background": "#ffffff",
-    "surface": "#FBF8C5",
-    "surfaceStrong": "#D3D0CB",
-    "text": "#071013",
-    "heading": "#071013",
-    "muted": "#33392D",
-    "accent": "#EF8A17",
-    "accentStrong": "#8F250C",
-    "contrast": "#ffffff",
-    "heroText": "#ffffff",
-    "cardBackground": "#ffffff",
-    "tagBackground": "rgba(211, 208, 203, 0.5)"
+    "primaryAccent": "#8F250C",
+    "secondaryAccent": "#EF8A17"
   }
 }

@@ -9,8 +9,8 @@
   --color-text: #071013;
   --color-heading: #071013;
   --color-muted: #33392D;
-  --color-accent: #EF8A17;
-  --color-accent-strong: #8F250C;
+  --color-primary-accent: #8F250C;
+  --color-secondary-accent: #EF8A17;
   --color-contrast: #ffffff;
   --color-hero-text: #ffffff;
   --color-card-background: #ffffff;
@@ -19,6 +19,9 @@
   --default-font: "Lato", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --heading-font: "Raleway", sans-serif;
   --nav-font: "Lato", sans-serif;
+
+  --color-accent: var(--color-secondary-accent);
+  --color-accent-strong: var(--color-primary-accent);
 
   --background-color: var(--color-background);
   --surface-color: var(--color-surface);
@@ -29,9 +32,9 @@
   --offwhite: var(--color-surface);
   --grey: var(--color-muted);
   --offblack: var(--color-text);
-  --sienna: var(--color-accent-strong, var(--color-accent));
+  --sienna: var(--color-primary-accent);
   --timberwolf: var(--color-surface-strong, var(--color-surface));
-  --tangerine: var(--color-accent);
+  --tangerine: var(--color-secondary-accent);
   --charcoal: var(--color-heading);
 
   scroll-behavior: smooth;
