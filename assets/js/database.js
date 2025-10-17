@@ -9,7 +9,8 @@ const defaultConfig = {
   filters: {
     filter1: { label: "Focus" },
     filter2: { label: "Medical Population" },
-    filter3: { label: "Findings" }
+    filter3: { label: "Findings" },
+    decadePublished: { label: "Decade Published" }
   },
   infoFields: {
     info1: { label: "Context" },
@@ -44,6 +45,7 @@ let venueOptions = [];
 let activeVenues = new Set();
 const VENUE_FILTER_KEY = "venueFilter";
 const VENUE_FILTER_LABEL = "Venues";
+const DECADE_FILTER_KEY = "decadePublished";
 
 const debouncedUpdateFilterCounts = debounce(updateFilterCounts, 100);
 
@@ -65,6 +67,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   const { records, filters } = await loadDatabase();
 
   FILTER_KEYS = mergeFilterKeys(Object.keys(appConfig?.filters || {}), filters);
+  if (!FILTER_KEYS.includes(DECADE_FILTER_KEY)) {
+    FILTER_KEYS.push(DECADE_FILTER_KEY);
+  }
   filterLabels = buildFilterLabels(appConfig, FILTER_KEYS);
   infoLabels = buildInfoLabels(appConfig);
 
@@ -75,6 +80,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderFilterPanels(FILTER_KEYS, filterLabels);
   applyConfig(appConfig, filterLabels);
   database = ensureRecordsIncludeFilters(records, FILTER_KEYS);
+  database = appendDecadeFilters(database);
 
   generateFilters(database, filterLabels);
   initializeVenueFilters(database);
@@ -303,6 +309,36 @@ function ensureRecordsIncludeFilters(records, filterKeys) {
     });
     return normalized;
   });
+}
+
+function appendDecadeFilters(records) {
+  if (!Array.isArray(records)) return [];
+  return records.map((record) => {
+    const decades = deriveDecadesFromYear(record.year);
+    const decadeValue = decades.length > 0 ? decades.join(";") : "";
+    return {
+      ...record,
+      [DECADE_FILTER_KEY]: decadeValue
+    };
+  });
+}
+
+function deriveDecadesFromYear(yearValue) {
+  const raw = typeof yearValue === "string" || typeof yearValue === "number" ? String(yearValue) : "";
+  if (raw.trim().length === 0) return [];
+  const matches = raw.match(/\d{4}/g);
+  if (!matches) return [];
+
+  const decades = new Set();
+  matches.forEach((match) => {
+    const numericYear = parseInt(match, 10);
+    if (!Number.isFinite(numericYear)) return;
+    if (numericYear < 1000) return;
+    const decadeStart = Math.floor(numericYear / 10) * 10;
+    decades.add(`${decadeStart}s`);
+  });
+
+  return Array.from(decades).sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
 }
 
 function sortFilterKeys(keys = []) {
