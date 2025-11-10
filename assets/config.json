@@ -8,19 +8,28 @@
   },
   "filters": {
     "filter1": {
-      "label": "Frameworks"
+      "label": "Theory"
     },
     "filter2": {
-      "label": "Methods"
+      "label": "Method"
     },
     "filter3": {
-      "label": "Pedagogies"
+      "label": "Pedagogy / Instruction"
     },
     "filter4": {
-      "label": "Contexts"
+      "label": "Population"
     },
     "filter5": {
-      "label": "Constructs"
+      "label": "Setting"
+    },
+    "filter6": {
+      "label": "Subject / Content Area"
+    },
+    "filter7": {
+      "label": "Technologies"
+    },
+    "filter8": {
+      "label": "Construct"
     },
     "decadePublished": {
       "label": "Decade Published"
