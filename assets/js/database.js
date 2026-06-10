@@ -35,6 +35,8 @@ const COLOR_VARIABLE_MAP = {
 };
 
 let appConfig = cloneObject(defaultConfig);
+let configuredFilters = {};
+let hasExplicitFilterConfig = false;
 let database = [];
 let activeFilters = {};
 let filterVisibility = {};
@@ -66,10 +68,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const { records, filters } = await loadDatabase();
 
-  FILTER_KEYS = mergeFilterKeys(Object.keys(appConfig?.filters || {}), filters);
-  if (!FILTER_KEYS.includes(DECADE_FILTER_KEY)) {
-    FILTER_KEYS.push(DECADE_FILTER_KEY);
-  }
+  FILTER_KEYS = resolveFilterKeys(filters);
   filterLabels = buildFilterLabels(appConfig, FILTER_KEYS);
   infoLabels = buildInfoLabels(appConfig);
 
@@ -295,6 +294,33 @@ function mergeFilterKeys(configKeys = [], csvKeys = []) {
   }
 
   return merged;
+}
+
+function resolveFilterKeys(csvKeys = []) {
+  if (hasExplicitFilterConfig) {
+    return getConfiguredFilterKeys(configuredFilters);
+  }
+
+  const mergedKeys = mergeFilterKeys(Object.keys(appConfig?.filters || {}), csvKeys);
+  if (!mergedKeys.includes(DECADE_FILTER_KEY)) {
+    mergedKeys.push(DECADE_FILTER_KEY);
+  }
+
+  return mergedKeys;
+}
+
+function getConfiguredFilterKeys(filtersConfig) {
+  if (!isObject(filtersConfig)) return [];
+
+  return Object.entries(filtersConfig)
+    .filter(([key, config]) => isFilterKey(key) && isFilterConfigEnabled(config))
+    .map(([key]) => key.trim());
+}
+
+function isFilterConfigEnabled(config) {
+  if (config === false) return false;
+  if (!isObject(config)) return true;
+  return config.visible !== false && config.enabled !== false;
 }
 
 function ensureRecordsIncludeFilters(records, filterKeys) {
@@ -1177,10 +1203,16 @@ function setupFilterToggle() {
 
 async function loadConfig() {
   let mergedConfig = cloneObject(defaultConfig);
+  configuredFilters = {};
+  hasExplicitFilterConfig = false;
   try {
     const response = await fetch("assets/config.json", { cache: "no-store" });
     if (!response.ok) throw new Error("Config not found");
     const userConfig = await response.json();
+    hasExplicitFilterConfig = Object.prototype.hasOwnProperty.call(userConfig, "filters");
+    configuredFilters = hasExplicitFilterConfig && isObject(userConfig.filters)
+      ? cloneObject(userConfig.filters)
+      : {};
     mergedConfig = mergeDeep(defaultConfig, userConfig);
   } catch (error) {
     console.warn("Using default configuration due to error loading config:", error);
