@@ -1,10 +1,10 @@
 {
   "site": {
     "pageTitle": "Interactive Literature Database",
-    "pageSubtitle": "Journal of the Learning Sciences",
-    "heroHeading": "Database Title",
-    "submitButtonText": "Submit an Article",
-    "submitButtonLink": "https://forms.gle/42GckNJQ4EVMdHDr7"
+    "pageSubtitle": "An interactive literature review",
+    "heroHeading": "Your Database Title",
+    "submitButtonText": "Suggest a Source",
+    "submitButtonLink": ""
   },
   "filters": {
     "filter1": {
