@@ -18,6 +18,8 @@ For most people, you only need to edit two files:
 * `assets/config.json`
 * `assets/database.csv`
 
+The template starts with four visible filter groups by default: `Theory`, `Method`, `Population`, and `Setting`.
+
 ## Quick Vocabulary
 
 If GitHub is new to you, these words matter:
@@ -136,7 +138,8 @@ If you want a neutral starting point, your config might look like this:
   "filters": {
     "filter1": { "label": "Theory" },
     "filter2": { "label": "Method" },
-    "filter3": { "label": "Population" }
+    "filter3": { "label": "Population" },
+    "filter4": { "label": "Setting" }
   },
   "infoFields": {
     "info1": { "label": "Setting" },
@@ -155,8 +158,9 @@ For example:
 * `filters.filter1.label` matches the `filter1` column in `assets/database.csv`
 * `filters.filter2.label` matches the `filter2` column
 * `filters.filter3.label` matches the `filter3` column
+* `filters.filter4.label` matches the `filter4` column
 
-If you add `filter4` in `config.json`, also add a `filter4` column in your CSV.
+The page only shows filter groups that are listed in `config.json`.
 
 ## Step 4: Build Your Spreadsheet
 
@@ -191,9 +195,9 @@ If you want to avoid extra software, edit the file directly on GitHub.
 Use a structure like this:
 
 ```csv
-title,authors_abbrev,year,venue,abstract,doi_link,filter1,filter2,filter3,info1,info2,info3
-"Example Source One","Lee et al.",2024,"Example Journal","Short summary goes here.","https://doi.org/10.1234/example1","Theory A","Interview Study","Undergraduates","University classroom","Interviews","Starter sample"
-"Example Source Two","Patel and Nguyen",2022,"Sample Review","Another short summary.","https://doi.org/10.1234/example2","Theory B; Theory C","Case Study","Teachers","Professional development","Observations","Multiple tags example"
+title,authors_abbrev,year,venue,abstract,doi_link,filter1,filter2,filter3,filter4,info1,info2,info3
+"Example Source One","Lee et al.",2024,"Example Journal","Short summary goes here.","https://doi.org/10.1234/example1","Theory A","Interview Study","Undergraduates","University classroom","Higher education","Interviews","Starter sample"
+"Example Source Two","Patel and Nguyen",2022,"Sample Review","Another short summary.","https://doi.org/10.1234/example2","Theory B; Theory C","Case Study","Teachers","Professional development","Teacher learning","Observations","Multiple tags example"
 ```
 
 Rules to follow:
@@ -218,14 +222,37 @@ If you edit `assets/database.csv` on GitHub:
 
 ## Step 6: Add or Remove Filter Groups
 
-You are not limited to three filters.
+The visible filter groups are controlled by the `filters` section in `assets/config.json`.
 
-If you want more filter groups:
+The template starts with four visible filters:
 
+1. `filter1`: Theory
+2. `filter2`: Method
+3. `filter3`: Population
+4. `filter4`: Setting
 
-1. Add a new filter in `assets/config.json`, such as `filter4`.
-2. Give it a label, such as `"Setting"` or `"Construct"`.
-3. Add a matching `filter4` column to `assets/database.csv`.
+### To remove a filter group
+
+1. Open `assets/config.json`.
+2. Click the pencil icon.
+3. Delete the filter entry you do not want to show.
+4. Click **Commit changes...** and save.
+
+Example: if you do not want a `Setting` filter, remove this block:
+
+```json
+"filter4": { "label": "Setting" }
+```
+
+After you remove it from `config.json`, that filter will no longer appear on the page.
+
+You can leave the matching CSV column in place if you want. It will stay hidden. If you want a cleaner spreadsheet, you can remove that column from `assets/database.csv` too.
+
+### To add a filter group
+
+1. Add a new filter in `assets/config.json`, such as `filter5`.
+2. Give it a label, such as `"Topic"` or `"Construct"`.
+3. Add a matching `filter5` column to `assets/database.csv`.
 4. Fill that column with tags for each row.
 
 Example:
@@ -235,15 +262,22 @@ Example:
   "filter1": { "label": "Theory" },
   "filter2": { "label": "Method" },
   "filter3": { "label": "Population" },
-  "filter4": { "label": "Setting" }
+  "filter4": { "label": "Setting" },
+  "filter5": { "label": "Topic" }
 }
 ```
 
 And then in your CSV:
 
 ```csv
-title,authors_abbrev,year,venue,abstract,doi_link,filter1,filter2,filter3,filter4
+title,authors_abbrev,year,venue,abstract,doi_link,filter1,filter2,filter3,filter4,filter5
 ```
+
+Important:
+
+* If a filter should be visible, it must be listed in `assets/config.json`.
+* If you add `filter5` in `config.json`, add a `filter5` column in the CSV.
+* If you remove a filter from `config.json`, it disappears from the page even if the old CSV column is still there.
 
 ## Step 7: Publish the Site with GitHub Pages
 

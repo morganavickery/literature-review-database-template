@@ -14,27 +14,11 @@
       "label": "Method"
     },
     "filter3": {
-      "label": "Pedagogy / Instruction"
-    },
-    "filter4": {
       "label": "Population"
     },
-    "filter5": {
+    "filter4": {
       "label": "Setting"
-    },
-    "filter6": {
-      "label": "Subject / Content Area"
-    },
-    "filter7": {
-      "label": "Technologies"
-    },
-    "filter8": {
-      "label": "Construct"
-    },
-    "decadePublished": {
-      "label": "Decade Published"
     }
-
   },
   "infoFields": {
     "info1": {
